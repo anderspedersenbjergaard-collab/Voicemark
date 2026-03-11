@@ -283,7 +283,7 @@ function Landing({ onSignup, onLogin }) {
         <p style={{ color:"rgba(255,255,255,.8)",fontSize:15,marginBottom:28 }}>3 reviews free · No credit card · 2 minutes to set up</p>
         <button className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</button>
       </div>
-      <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
+      <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
     </div>
   );
 }
@@ -779,6 +779,80 @@ function ResetPassword({ onDone }) {
   );
 }
 
+// ── LEGAL PAGE WRAPPER ─────────────────────────────────────────────────────
+function LegalPage({ title, children }) {
+  return (
+    <div>
+      <nav className="nav">
+        <Logo onClick={() => window.location.href = "/"} />
+        <div className="nav-actions">
+          <a href="/" className="btn btn-ghost">← Back to home</a>
+        </div>
+      </nav>
+      <div style={{ maxWidth:720, margin:"0 auto", padding:"64px 48px 96px" }}>
+        <h1 style={{ fontSize:36, fontWeight:300, marginBottom:8 }}>{title}</h1>
+        <p style={{ color:"var(--muted)", fontSize:13, marginBottom:48 }}>Last updated: March 2026</p>
+        <div style={{ fontSize:15, lineHeight:1.8, color:"#3a3630" }}>{children}</div>
+      </div>
+      <footer className="site-footer"><Logo /><span>© 2026 Voicemark</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
+    </div>
+  );
+}
+
+function H({ children }) { return <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:500, marginTop:40, marginBottom:12 }}>{children}</h2>; }
+function P({ children }) { return <p style={{ marginBottom:16 }}>{children}</p>; }
+
+function PrivacyPolicy() {
+  return (
+    <LegalPage title="Privacy Policy">
+      <P>Voicemark ("we", "our", or "us") is committed to protecting your privacy. This policy explains how we collect, use, and store your data when you use voicemark.co.</P>
+      <H>1. What we collect</H>
+      <P><strong>Account data:</strong> When you sign up, we collect your email address and company name. This is stored securely in our database (Supabase, hosted in the EU).</P>
+      <P><strong>Review data:</strong> Reviews submitted by your clients include their name, role, rating, and review text. This data is stored on your behalf and is only accessible to you.</P>
+      <P><strong>Payment data:</strong> Payments are processed by Stripe. We never see or store your credit card details. Stripe's privacy policy applies to payment processing.</P>
+      <P><strong>Usage data:</strong> We do not use analytics trackers or advertising cookies. We may log basic server-side data (IP addresses, request logs) for security purposes only.</P>
+      <H>2. How we use your data</H>
+      <P>We use your data solely to provide the Voicemark service — to store your reviews, display your widget, and manage your subscription. We do not sell, share, or use your data for advertising purposes.</P>
+      <H>3. Data storage and security</H>
+      <P>Your data is stored in Supabase (Stockholm, EU). We use row-level security to ensure users can only access their own data. All connections are encrypted via HTTPS.</P>
+      <H>4. Your rights</H>
+      <P>You have the right to access, correct, or delete your data at any time. To request data deletion, contact us at <a href="mailto:hello@voicemark.co" style={{color:"var(--teal)"}}>hello@voicemark.co</a>. We will process your request within 30 days.</P>
+      <H>5. Cookies</H>
+      <P>We use only essential cookies required for authentication (Supabase session tokens). We do not use marketing or tracking cookies.</P>
+      <H>6. Third-party services</H>
+      <P>We use the following third-party services: Supabase (database and auth), Stripe (payments), Vercel (hosting). Each has their own privacy policy which applies to data they process.</P>
+      <H>7. Contact</H>
+      <P>For any privacy-related questions, contact us at <a href="mailto:hello@voicemark.co" style={{color:"var(--teal)"}}>hello@voicemark.co</a>.</P>
+    </LegalPage>
+  );
+}
+
+function TermsOfService() {
+  return (
+    <LegalPage title="Terms of Service">
+      <P>By using Voicemark, you agree to these terms. Please read them carefully.</P>
+      <H>1. The service</H>
+      <P>Voicemark provides a platform for freelancers and consultants to collect, manage, and display client testimonials on their websites. We offer a free tier (up to 3 reviews) and a paid Pro plan ($19/month).</P>
+      <H>2. Your account</H>
+      <P>You are responsible for maintaining the security of your account and password. You must provide accurate information when creating your account. One account per person or business.</P>
+      <H>3. Acceptable use</H>
+      <P>You may not use Voicemark to collect fake or fabricated reviews, harass clients, or engage in any illegal activity. We reserve the right to suspend accounts that violate these terms.</P>
+      <H>4. Payments and billing</H>
+      <P>The Pro plan is billed at $19/month. You can cancel at any time from your dashboard — your subscription remains active until the end of the billing period. No refunds are issued for partial months, except within the first 7 days of your first payment, where we offer a full refund upon request.</P>
+      <H>5. Your content</H>
+      <P>You retain ownership of all reviews collected through your account. By using Voicemark, you grant us a limited license to store and display this content as part of the service. You are responsible for ensuring you have permission to collect and display reviews from your clients.</P>
+      <H>6. Service availability</H>
+      <P>We aim for high availability but do not guarantee uninterrupted service. We are not liable for any losses resulting from downtime or service interruptions.</P>
+      <H>7. Termination</H>
+      <P>You may delete your account at any time by contacting us at <a href="mailto:hello@voicemark.co" style={{color:"var(--teal)"}}>hello@voicemark.co</a>. We reserve the right to terminate accounts that violate these terms.</P>
+      <H>8. Changes to terms</H>
+      <P>We may update these terms from time to time. Continued use of Voicemark after changes constitutes acceptance of the new terms.</P>
+      <H>9. Contact</H>
+      <P>Questions about these terms? Contact us at <a href="mailto:hello@voicemark.co" style={{color:"var(--teal)"}}>hello@voicemark.co</a>.</P>
+    </LegalPage>
+  );
+}
+
 // ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
   const path = window.location.pathname;
@@ -786,6 +860,8 @@ export default function App() {
   if (collectMatch) {
     return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
   }
+  if (path === "/privacy") return <><StyleInject /><PrivacyPolicy /></>;
+  if (path === "/terms") return <><StyleInject /><TermsOfService /></>;
 
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
