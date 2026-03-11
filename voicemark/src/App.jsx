@@ -250,7 +250,10 @@ function Landing({ onSignup, onLogin }) {
             </div>
           ))}
         </div>
-        <div className="widget-code">{`<script src="https://www.voicemark.co/widget.js" data-id="your-id"></script>`}</div>
+        <div style={{ textAlign:"center",marginTop:24,padding:"20px 24px",background:"var(--teal-dim)",border:"1px solid #99f6e4",borderRadius:"var(--r)" }}>
+          <div style={{ fontSize:15,fontWeight:500,marginBottom:6 }}>🔗 One line of code. Paste it anywhere.</div>
+          <div style={{ fontSize:14,color:"var(--muted)" }}>Works with Squarespace, Wix, Webflow, WordPress, and any custom site.</div>
+        </div>
       </div>
       <div className="pricing-section">
         <h2>Simple, honest pricing</h2>
