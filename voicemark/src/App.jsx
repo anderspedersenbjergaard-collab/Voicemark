@@ -493,6 +493,27 @@ function Dashboard({ user, onLogout }) {
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
 
+  const [paymentSuccess, setPaymentSuccess] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("payment") === "success";
+  });
+
+  useEffect(() => {
+    if (paymentSuccess) {
+      // Clean URL without reloading
+      window.history.replaceState({}, "", "/");
+      // Poll until plan is updated in Supabase (webhook may have slight delay)
+      const poll = setInterval(async () => {
+        const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
+        if (data?.plan === "paid") {
+          setProfile(p => ({ ...p, plan: "paid" }));
+          clearInterval(poll);
+        }
+      }, 2000);
+      setTimeout(() => clearInterval(poll), 30000); // stop after 30s
+    }
+  }, []);
+
   const [saveCompany, setSaveCompany] = useState(profile?.company || "");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
