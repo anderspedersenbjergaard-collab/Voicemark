@@ -544,6 +544,11 @@ function Dashboard({ user, onLogout }) {
     setLoading(false);
   };
 
+  const total = reviews.length;
+  const approved = reviews.filter(r => r.status === "approved").length;
+  const pending = reviews.filter(r => r.status === "pending").length;
+  const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
+
   useEffect(() => {
     fetchReviews();
     const interval = setInterval(fetchReviews, 10000);
@@ -553,11 +558,6 @@ function Dashboard({ user, onLogout }) {
   useEffect(() => {
     if (!isPaid && total >= FREE_QUOTA) setShowPaywall(true);
   }, [total, isPaid]);
-
-  const total = reviews.length;
-  const approved = reviews.filter(r => r.status === "approved").length;
-  const pending = reviews.filter(r => r.status === "pending").length;
-  const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
   const updateStatus = async (id, status) => {
     await supabase.from("reviews").update({ status }).eq("id", id);
