@@ -262,7 +262,7 @@ function Landing({ onSignup, onLogin }) {
           <div className="p-price">$19 <span>/ month</span></div>
           <div className="p-note">Start with 3 free reviews · no card needed</div>
           <ul className="p-features">
-            {["Unlimited testimonials","Custom collection page","Embeddable website widget","Approve before publishing","Email notifications"].map(f => <li key={f}>{f}</li>)}
+            {["Unlimited testimonials","Custom collection page","Embeddable website widget","Approve before publishing"].map(f => <li key={f}>{f}</li>)}
           </ul>
           <button className="btn btn-primary btn-lg btn-full" onClick={onSignup}>Get started free →</button>
         </div>
@@ -387,7 +387,7 @@ function Paywall({ onClose, user }) {
         <p>You've used your 3 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
         <div className="m-price">$19 <span>/ month</span></div>
         <ul className="m-features">
-          {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
+          {["Unlimited testimonials","Embeddable widget","Custom branding"].map(f => <li key={f}>{f}</li>)}
         </ul>
         <button className="btn btn-primary btn-lg btn-full" style={{ marginBottom:10 }}
           onClick={() => window.open(stripeUrl.toString(), "_blank")}>
