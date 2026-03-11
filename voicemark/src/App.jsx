@@ -487,8 +487,6 @@ function Dashboard({ user, onLogout }) {
   const [showPaywall, setShowPaywall] = useState(false);
   const [copied, setCopied] = useState(false);
   const [viewCollect, setViewCollect] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-
   const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
