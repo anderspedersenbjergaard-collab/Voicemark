@@ -293,7 +293,19 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
   const [f, setF] = useState({ email:"", password:"", company:"" });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
+
+  const sendReset = async () => {
+    if (!f.email) { setErr("Please enter your email address"); return; }
+    setLoading(true); setErr("");
+    const { error } = await supabase.auth.resetPasswordForEmail(f.email, {
+      redirectTo: "https://www.voicemark.co"
+    });
+    if (error) { setErr(error.message); } else { setResetSent(true); }
+    setLoading(false);
+  };
 
   const go = async () => {
     setErr(""); setLoading(true);
@@ -316,6 +328,26 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
     setLoading(false);
   };
 
+  if (forgotMode) return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-logo" onClick={onHome}>Voice<span>mark</span></div>
+        {resetSent ? <>
+          <h2>Check your inbox</h2>
+          <p className="auth-sub">We've sent a password reset link to <strong>{f.email}</strong></p>
+          <button className="btn btn-ghost btn-full" style={{ marginTop:16 }} onClick={() => { setForgotMode(false); setResetSent(false); }}>Back to log in</button>
+        </> : <>
+          <h2>Reset password</h2>
+          <p className="auth-sub">Enter your email and we'll send you a reset link</p>
+          <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && sendReset()} /></div>
+          {err && <p className="err">{err}</p>}
+          <button className="btn btn-primary btn-full" onClick={sendReset} disabled={loading}>{loading ? "Sending..." : "Send reset link →"}</button>
+          <div className="auth-switch"><button onClick={() => setForgotMode(false)}>Back to log in</button></div>
+        </>}
+      </div>
+    </div>
+  );
+
   return (
     <div className="auth-wrap">
       <div className="auth-card">
@@ -324,7 +356,13 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
         {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} /></div>}
         <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
-        <div className="field"><label>Password</label><input type="password" placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} /></div>
+        <div className="field">
+          <label style={{ display:"flex", justifyContent:"space-between" }}>
+            Password
+            {mode === "login" && <button style={{ background:"none",border:"none",color:"var(--teal)",fontSize:12,cursor:"pointer",fontFamily:"inherit" }} onClick={() => setForgotMode(true)}>Forgot password?</button>}
+          </label>
+          <input type="password" placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} />
+        </div>
         {err && <p className="err">{err}</p>}
         <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Please wait..." : mode === "login" ? "Log in →" : "Create account →"}</button>
         <div className="auth-switch">
@@ -603,6 +641,44 @@ function Dashboard({ user, onLogout }) {
   );
 }
 
+// ── RESET PASSWORD SCREEN ──────────────────────────────────────────────────
+function ResetPassword({ onDone }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const go = async () => {
+    if (!password || password.length < 6) { setErr("Password must be at least 6 characters"); return; }
+    if (password !== confirm) { setErr("Passwords do not match"); return; }
+    setLoading(true); setErr("");
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) { setErr(error.message); setLoading(false); return; }
+    setDone(true);
+    setTimeout(onDone, 2000);
+  };
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-logo">Voice<span>mark</span></div>
+        {done ? <>
+          <h2>Password updated!</h2>
+          <p className="auth-sub">Redirecting you to log in...</p>
+        </> : <>
+          <h2>Set new password</h2>
+          <p className="auth-sub">Choose a strong password for your account</p>
+          <div className="field"><label>New password</label><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} /></div>
+          <div className="field"><label>Confirm password</label><input type="password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
+          {err && <p className="err">{err}</p>}
+          <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Saving..." : "Set new password →"}</button>
+        </>}
+      </div>
+    </div>
+  );
+}
+
 // ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("landing");
@@ -610,6 +686,28 @@ export default function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // Check if this is a password recovery redirect from Supabase email link
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setChecking(false);
+      setScreen("reset");
+      return;
+    }
+
+    // Listen for auth state changes (handles magic links etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setScreen("reset");
+        setChecking(false);
+        return;
+      }
+      if (session?.user && screen !== "reset") {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        setUser({ ...session.user, profile });
+        setScreen("app");
+      }
+    });
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
@@ -618,6 +716,8 @@ export default function App() {
       }
       setChecking(false);
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (checking) return <><StyleInject /><div className="loading" style={{ minHeight:"100vh" }}>Loading...</div></>;
@@ -631,6 +731,7 @@ export default function App() {
       {screen === "app" && user && <Dashboard user={user} onLogout={logout} />}
       {screen === "login" && <Auth mode="login" onAuth={auth} onSwitch={() => setScreen("signup")} onHome={() => setScreen("landing")} />}
       {screen === "signup" && <Auth mode="signup" onAuth={auth} onSwitch={() => setScreen("login")} onHome={() => setScreen("landing")} />}
+      {screen === "reset" && <ResetPassword onDone={() => setScreen("login")} />}
       {screen === "landing" && <Landing onSignup={() => setScreen("signup")} onLogin={() => setScreen("login")} />}
     </>
   );
