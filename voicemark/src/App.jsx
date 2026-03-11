@@ -395,23 +395,40 @@ function Paywall({ onClose }) {
 }
 
 // ── COLLECT PAGE ───────────────────────────────────────────────────────────
-function CollectPage({ userId, company, onDone }) {
+function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [f, setF] = useState({ name:"", role:"", text:"" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [userId, setUserId] = useState(userIdProp || null);
+  const [company, setCompany] = useState(companyProp || "");
+  const [profileLoading, setProfileLoading] = useState(!!slug);
   const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
+
+  // If rendered via URL (/collect/slug), look up profile from slug
+  useEffect(() => {
+    if (!slug) return;
+    supabase.from("profiles").select("id, company").eq("slug", slug).single()
+      .then(({ data, error }) => {
+        if (data) { setUserId(data.id); setCompany(data.company); }
+        else { setErr("Collection page not found."); }
+        setProfileLoading(false);
+      });
+  }, [slug]);
 
   const submit = async () => {
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
+    if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
-    if (error) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
+    if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
     if (onDone) setTimeout(onDone, 2000);
   };
+
+  if (profileLoading) return <div className="collect-page"><div className="loading">Loading...</div></div>;
 
   return (
     <div className="collect-page">
