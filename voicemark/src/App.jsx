@@ -456,7 +456,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
           <div className="success-card">
             <div className="success-icon">🎉</div>
             <h2 style={{ marginBottom:8 }}>Thank you!</h2>
-            <p style={{ color:"var(--muted)", fontSize:14 }}>Your review has been submitted and will appear on {company}'s website shortly.</p>
+            <p style={{ color:"var(--muted)", fontSize:14 }}>Your review has been submitted and will appear on {company || "their"} website shortly.</p>
           </div>
         )}
       </div>
@@ -492,7 +492,12 @@ function Dashboard({ user, onLogout }) {
     setLoading(false);
   };
 
-  useEffect(() => { fetchReviews(); }, []);
+  useEffect(() => {
+    fetchReviews();
+    // Poll for new reviews every 10 seconds
+    const interval = setInterval(fetchReviews, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
