@@ -456,9 +456,17 @@ function Dashboard({ user, onLogout }) {
   const [copied, setCopied] = useState(false);
   const [viewCollect, setViewCollect] = useState(false);
 
-  const profile = user.profile;
+  const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
-  const collectUrl = `voicemark.app/collect/${profile?.slug}`;
+  const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
+
+  // Re-fetch profile in case slug wasn't loaded at login
+  useEffect(() => {
+    if (!profile?.slug) {
+      supabase.from("profiles").select("*").eq("id", user.id).single()
+        .then(({ data }) => { if (data) setProfile(data); });
+    }
+  }, [user.id]);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -565,8 +573,8 @@ function Dashboard({ user, onLogout }) {
                 <h3>Add to your website</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Paste this one line of code anywhere on your website. The widget updates automatically when you approve new reviews.</p>
                 <div className="embed-box">
-                  <code>{`<script src="https://voicemark.app/widget.js" data-id="${user.id}"></script>`}</code>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://voicemark.app/widget.js" data-id="${user.id}"></script>`)}>{copied ? "✓ Copied!" : "Copy code"}</button>
+                  <code>{`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`}</code>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`)}>{copied ? "✓ Copied!" : "Copy code"}</button>
                 </div>
               </div>
               <div className="settings-card">
