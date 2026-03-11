@@ -309,7 +309,7 @@ function Paywall({ onClose }) {
           {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
         </ul>
         <button className="btn btn-primary btn-lg btn-full" style={{ marginBottom:10 }}
-          onClick={() => window.open("https://buy.stripe.com/test_4gM9ATbq5bNJ8gB47V3F600","_blank")}>
+          onClick={() => window.open("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01","_blank")}>
           Upgrade with Stripe →
         </button>
         <button className="btn btn-ghost btn-full" onClick={onClose}>Maybe later</button>
