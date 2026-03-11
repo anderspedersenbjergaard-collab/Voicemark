@@ -379,7 +379,7 @@ function Paywall({ onClose }) {
     <div className="modal-overlay">
       <div className="modal">
         <h2>Free reviews used up</h2>
-        <p>You've collected 10 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
+        <p>You've used your 3 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
         <div className="m-price">$19 <span>/ month</span></div>
         <ul className="m-features">
           {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
@@ -476,6 +476,19 @@ function Dashboard({ user, onLogout }) {
   const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
+
+  const [saveCompany, setSaveCompany] = useState(profile?.company || "");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+
+  const saveProfile = async () => {
+    if (!saveCompany.trim()) { setSaveMsg("Company name cannot be empty"); return; }
+    setSaving(true); setSaveMsg("");
+    const { error } = await supabase.from("profiles").update({ company: saveCompany.trim() }).eq("id", user.id);
+    if (error) { setSaveMsg("Something went wrong. Try again."); }
+    else { setProfile(p => ({ ...p, company: saveCompany.trim() })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
+    setSaving(false);
+  };
 
   // Re-fetch profile in case slug wasn't loaded at login
   useEffect(() => {
@@ -652,9 +665,10 @@ function Dashboard({ user, onLogout }) {
             <div className="content">
               <div className="settings-card">
                 <h3>Account</h3>
-                <div className="field"><label>Company name</label><input defaultValue={profile?.company} /></div>
+                <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
-                <button className="btn btn-primary btn-sm">Save changes</button>
+                {saveMsg && <p style={{ fontSize:13, color: saveMsg.startsWith("✓") ? "var(--teal)" : "#dc2626", marginBottom:10 }}>{saveMsg}</p>}
+                <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
               </div>
               <div className="settings-card">
                 <h3>Subscription</h3>
