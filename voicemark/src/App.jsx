@@ -36,7 +36,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .logo{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.3px;cursor:pointer}
 .logo span{color:var(--teal)}
 .nav-actions{display:flex;gap:10px;align-items:center}
-.hero{max-width:860px;margin:0 auto;padding:88px 48px 72px;text-align:center}
+.hero{max-width:860px;margin:0 auto;padding:52px 48px 56px;text-align:center}
 .hero-badge{display:inline-block;background:var(--teal-light);color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px;margin-bottom:28px}
 .hero h1{font-size:clamp(40px,6vw,68px);letter-spacing:-1px;margin-bottom:20px;font-weight:300}
 .hero h1 em{color:var(--teal);font-style:italic}
@@ -152,10 +152,17 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .stat-val{font-family:'Fraunces',serif;font-size:36px;font-weight:300;margin-bottom:4px}
 .stat-label{font-size:13px;color:var(--muted)}
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--muted);font-size:14px}
+.faq-section{max-width:720px;margin:0 auto;padding:72px 48px}
+.faq-section h2{font-size:36px;font-weight:300;text-align:center;margin-bottom:40px}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
+.faq-q{font-size:15px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-q:hover{color:var(--teal)}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.75;margin-top:12px}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
-  .hero{padding:56px 20px}
-  .how-steps,.widget-grid,.stats-row{grid-template-columns:1fr}
+  .hero{padding:40px 20px}
+  .how-steps,.widget-grid,.stats-row,.faq-section{grid-template-columns:1fr}
+  .faq-section{padding:48px 20px}
   .app{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative}
   .content{padding:20px}
@@ -174,6 +181,18 @@ function StyleInject() {
 
 function Logo({ onClick }) {
   return <span className="logo" onClick={onClick}>Voice<span>mark</span></span>;
+}
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="faq-item">
+      <div className="faq-q" onClick={() => setOpen(o => !o)}>
+        <span>{q}</span><span>{open ? "−" : "+"}</span>
+      </div>
+      {open && <div className="faq-a">{a}</div>}
+    </div>
+  );
 }
 
 // ── LANDING ────────────────────────────────────────────────────────────────
@@ -245,7 +264,18 @@ function Landing({ onSignup, onLogin }) {
           <button className="btn btn-primary btn-lg btn-full" onClick={onSignup}>Get started free →</button>
         </div>
       </div>
-      <footer className="site-footer"><Logo /><span>© 2025 Voicemark · Built for freelancers & consultants</span></footer>
+      <div className="faq-section">
+        <h2>Frequently asked questions</h2>
+        {[
+          ["Does it work with any website?","Yes – Squarespace, Wix, Webflow, WordPress, or any custom site. Just paste one line of code."],
+          ["Do my clients need to create an account?","No. They just click your link, leave a review, and they're done. Takes 60 seconds."],
+          ["Can I choose which reviews to show?","Yes. Every review goes through your approval queue first – you decide what gets published."],
+          ["Can I cancel anytime?","Absolutely. No contracts, no questions asked. Cancel from your dashboard settings."],
+          ["What happens after 10 free reviews?","You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."],
+          ["Do you offer refunds?","If you're not satisfied within the first 7 days, we'll refund you in full. No questions asked."],
+        ].map(([q,a]) => <FaqItem key={q} q={q} a={a} />)}
+      </div>
+      <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
     </div>
   );
 }
