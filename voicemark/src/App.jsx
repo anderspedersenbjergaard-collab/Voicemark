@@ -36,7 +36,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .logo{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.3px;cursor:pointer}
 .logo span{color:var(--teal)}
 .nav-actions{display:flex;gap:10px;align-items:center}
-.hero{max-width:860px;margin:0 auto;padding:52px 48px 56px;text-align:center}
+.hero{max-width:860px;margin:0 auto;padding:52px 48px 36px;text-align:center}
 .hero-badge{display:inline-block;background:var(--teal-light);color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px;margin-bottom:28px}
 .hero h1{font-size:clamp(40px,6vw,68px);letter-spacing:-1px;margin-bottom:20px;font-weight:300}
 .hero h1 em{color:var(--teal);font-style:italic}
@@ -152,7 +152,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .stat-val{font-family:'Fraunces',serif;font-size:36px;font-weight:300;margin-bottom:4px}
 .stat-label{font-size:13px;color:var(--muted)}
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--muted);font-size:14px}
-.faq-section{max-width:720px;margin:0 auto;padding:72px 48px}
+.faq-section{max-width:860px;margin:0 auto;padding:72px 48px}
 .faq-section h2{font-size:36px;font-weight:300;text-align:center;margin-bottom:40px}
 .faq-item{border-bottom:1px solid var(--border);padding:20px 0}
 .faq-q{font-size:15px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
@@ -250,7 +250,7 @@ function Landing({ onSignup, onLogin }) {
             </div>
           ))}
         </div>
-        <div className="widget-code">{`<script src="https://voicemark.app/widget.js" data-id="your-id"></script>`}</div>
+        <div className="widget-code">{`<script src="https://www.voicemark.co/widget.js" data-id="your-id"></script>`}</div>
       </div>
       <div className="pricing-section">
         <h2>Simple, honest pricing</h2>
@@ -274,6 +274,11 @@ function Landing({ onSignup, onLogin }) {
           ["What happens after 3 free reviews?","You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."],
           ["Do you offer refunds?","If you're not satisfied within the first 7 days, we'll refund you in full. No questions asked."],
         ].map(([q,a]) => <FaqItem key={q} q={q} a={a} />)}
+      </div>
+      <div style={{ background:"var(--teal)",padding:"56px 48px",textAlign:"center" }}>
+        <h2 style={{ color:"white",fontSize:32,fontWeight:300,marginBottom:12 }}>Ready to collect your first review?</h2>
+        <p style={{ color:"rgba(255,255,255,.8)",fontSize:15,marginBottom:28 }}>3 reviews free · No credit card · 2 minutes to set up</p>
+        <button className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</button>
       </div>
       <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
     </div>
