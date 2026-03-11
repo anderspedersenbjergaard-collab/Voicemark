@@ -275,7 +275,6 @@ function Landing({ onSignup, onLogin }) {
           ["Can I choose which reviews to show?","Yes. Every review goes through your approval queue first – you decide what gets published."],
           ["Can I cancel anytime?","Absolutely. No contracts, no questions asked. Cancel from your dashboard settings."],
           ["What happens after 3 free reviews?","You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."],
-          ["Do you offer refunds?","If you're not satisfied within the first 7 days, we'll refund you in full. No questions asked."],
         ].map(([q,a]) => <FaqItem key={q} q={q} a={a} />)}
       </div>
       <div style={{ background:"var(--teal)",padding:"56px 48px",textAlign:"center" }}>
@@ -838,7 +837,7 @@ function TermsOfService() {
       <H>3. Acceptable use</H>
       <P>You may not use Voicemark to collect fake or fabricated reviews, harass clients, or engage in any illegal activity. We reserve the right to suspend accounts that violate these terms.</P>
       <H>4. Payments and billing</H>
-      <P>The Pro plan is billed at $19/month. You can cancel at any time from your dashboard — your subscription remains active until the end of the billing period. No refunds are issued for partial months, except within the first 7 days of your first payment, where we offer a full refund upon request.</P>
+      <P>The Pro plan is billed at $19/month. You can cancel at any time from your dashboard — your subscription remains active until the end of the billing period.</P>
       <H>5. Your content</H>
       <P>You retain ownership of all reviews collected through your account. By using Voicemark, you grant us a limited license to store and display this content as part of the service. You are responsible for ensuring you have permission to collect and display reviews from your clients.</P>
       <H>6. Service availability</H>
