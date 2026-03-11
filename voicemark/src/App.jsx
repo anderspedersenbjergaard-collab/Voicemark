@@ -662,6 +662,14 @@ function Dashboard({ user, onLogout }) {
                   {isPaid ? "You're on the Pro plan ($19/mo)." : `Free plan · ${Math.max(0, FREE_QUOTA - total)} of ${FREE_QUOTA} free reviews remaining.`}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
+                {isPaid && (
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => window.open("https://billing.stripe.com/p/login/8x23cv4Wd1Au5Gm5CG4AU00", "_blank")}
+                  >
+                    Cancel subscription
+                  </button>
+                )}
               </div>
             </div>
           </>
