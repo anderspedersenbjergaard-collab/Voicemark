@@ -5,7 +5,7 @@ const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const FREE_QUOTA = 10;
+const FREE_QUOTA = 3;
 const newSlug = (company) => company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 const today = () => new Date().toISOString().split("T")[0];
@@ -220,7 +220,7 @@ function Landing({ onSignup, onLogin }) {
           <button className="btn btn-primary btn-lg" onClick={onSignup}>Collect your first review →</button>
           <button className="btn btn-outline btn-lg" onClick={onLogin}>Log in</button>
         </div>
-        <p className="hero-note">10 reviews free · No credit card · 2 minutes to set up</p>
+        <p className="hero-note">3 reviews free · No credit card · 2 minutes to set up</p>
       </section>
       <div className="how-section">
         <div className="how-inner">
@@ -257,7 +257,7 @@ function Landing({ onSignup, onLogin }) {
         <p>One plan. Everything included. Cancel anytime.</p>
         <div className="pricing-card">
           <div className="p-price">$19 <span>/ month</span></div>
-          <div className="p-note">Start with 10 free reviews · no card needed</div>
+          <div className="p-note">Start with 3 free reviews · no card needed</div>
           <ul className="p-features">
             {["Unlimited testimonials","Custom collection page","Embeddable website widget","Approve before publishing","Email notifications"].map(f => <li key={f}>{f}</li>)}
           </ul>
@@ -271,7 +271,7 @@ function Landing({ onSignup, onLogin }) {
           ["Do my clients need to create an account?","No. They just click your link, leave a review, and they're done. Takes 60 seconds."],
           ["Can I choose which reviews to show?","Yes. Every review goes through your approval queue first – you decide what gets published."],
           ["Can I cancel anytime?","Absolutely. No contracts, no questions asked. Cancel from your dashboard settings."],
-          ["What happens after 10 free reviews?","You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."],
+          ["What happens after 3 free reviews?","You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."],
           ["Do you offer refunds?","If you're not satisfied within the first 7 days, we'll refund you in full. No questions asked."],
         ].map(([q,a]) => <FaqItem key={q} q={q} a={a} />)}
       </div>
@@ -313,7 +313,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
       <div className="auth-card">
         <div className="auth-logo" onClick={onHome}>Voice<span>mark</span></div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
-        <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "10 reviews free · no credit card"}</p>
+        <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
         {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} /></div>}
         <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
         <div className="field"><label>Password</label><input type="password" placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} /></div>
