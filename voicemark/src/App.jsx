@@ -694,20 +694,7 @@ export default function App() {
       return;
     }
 
-    // Listen for auth state changes (handles magic links etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setScreen("reset");
-        setChecking(false);
-        return;
-      }
-      if (session?.user && screen !== "reset") {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-        setUser({ ...session.user, profile });
-        setScreen("app");
-      }
-    });
-
+    // Get current session first, then set up listener for future changes
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
@@ -715,6 +702,14 @@ export default function App() {
         setScreen("app");
       }
       setChecking(false);
+    });
+
+    // Listen for PASSWORD_RECOVERY event (from reset email link)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setScreen("reset");
+        setChecking(false);
+      }
     });
 
     return () => subscription.unsubscribe();
