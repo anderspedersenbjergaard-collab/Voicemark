@@ -8,7 +8,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const FREE_QUOTA = 3;
 const newSlug = (company) => company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
-const today = () => new Date().toISOString().split("T")[0];
+
 
 const G = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Epilogue:wght@300;400;500;600&display=swap');
@@ -314,7 +314,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) { setErr(error.message); setLoading(false); return; }
-        const slug = newSlug(f.company);
+        const slug = newSlug(f.company) + "-" + Date.now().toString(36);
         await supabase.from("profiles").insert({ id: data.user.id, company: f.company, slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
@@ -422,6 +422,16 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
+    // Check if owner is on free plan and has hit quota
+    const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
+    if (ownerProfile?.plan !== "paid") {
+      const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
+      if (count >= FREE_QUOTA) {
+        setErr("This collection page is currently unavailable. Please contact the owner.");
+        setLoading(false);
+        return;
+      }
+    }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
@@ -484,9 +494,10 @@ function Dashboard({ user, onLogout }) {
   const saveProfile = async () => {
     if (!saveCompany.trim()) { setSaveMsg("Company name cannot be empty"); return; }
     setSaving(true); setSaveMsg("");
-    const { error } = await supabase.from("profiles").update({ company: saveCompany.trim() }).eq("id", user.id);
+    const newSlugVal = newSlug(saveCompany.trim());
+    const { error } = await supabase.from("profiles").update({ company: saveCompany.trim(), slug: newSlugVal }).eq("id", user.id);
     if (error) { setSaveMsg("Something went wrong. Try again."); }
-    else { setProfile(p => ({ ...p, company: saveCompany.trim() })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
+    else { setProfile(p => ({ ...p, company: saveCompany.trim(), slug: newSlugVal })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
     setSaving(false);
   };
 
@@ -507,10 +518,13 @@ function Dashboard({ user, onLogout }) {
 
   useEffect(() => {
     fetchReviews();
-    // Poll for new reviews every 10 seconds
     const interval = setInterval(fetchReviews, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!isPaid && total >= FREE_QUOTA) setShowPaywall(true);
+  }, [total, isPaid]);
 
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
@@ -531,7 +545,7 @@ function Dashboard({ user, onLogout }) {
       <StyleInject />
       {showPaywall && <Paywall onClose={() => setShowPaywall(false)} />}
       <aside className="sidebar">
-        <div className="s-logo" onClick={onLogout}>Voice<span>mark</span></div>
+        <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
           {[["reviews","⭐","Reviews"],["embed","🔗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
             <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => setTab(v)}><span>{ic}</span><span>{lb}</span></div>
