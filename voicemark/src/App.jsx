@@ -689,6 +689,12 @@ function ResetPassword({ onDone }) {
 
 // ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
+  const path = window.location.pathname;
+  const collectMatch = path.match(/^\/collect\/(.+)$/);
+  if (collectMatch) {
+    return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
+  }
+
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
