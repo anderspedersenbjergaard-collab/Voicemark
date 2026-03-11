@@ -374,7 +374,12 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
 }
 
 // ── PAYWALL ────────────────────────────────────────────────────────────────
-function Paywall({ onClose }) {
+function Paywall({ onClose, user }) {
+  const stripeUrl = new URL("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01");
+  if (user?.email) stripeUrl.searchParams.set("prefilled_email", user.email);
+  if (user?.id) stripeUrl.searchParams.set("client_reference_id", user.id);
+  stripeUrl.searchParams.set("success_url", "https://www.voicemark.co?payment=success");
+
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -385,7 +390,7 @@ function Paywall({ onClose }) {
           {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
         </ul>
         <button className="btn btn-primary btn-lg btn-full" style={{ marginBottom:10 }}
-          onClick={() => window.open("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01","_blank")}>
+          onClick={() => window.open(stripeUrl.toString(), "_blank")}>
           Upgrade with Stripe →
         </button>
         <button className="btn btn-ghost btn-full" onClick={onClose}>Maybe later</button>
@@ -482,6 +487,7 @@ function Dashboard({ user, onLogout }) {
   const [showPaywall, setShowPaywall] = useState(false);
   const [copied, setCopied] = useState(false);
   const [viewCollect, setViewCollect] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
@@ -508,6 +514,26 @@ function Dashboard({ user, onLogout }) {
         .then(({ data }) => { if (data) setProfile(data); });
     }
   }, [user.id]);
+
+  // Detect ?payment=success in URL and poll until plan is updated
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setPaymentSuccess(true);
+      window.history.replaceState({}, "", "/");
+      // Poll Supabase every 3 seconds until plan = paid (max 10 attempts)
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
+        if (data?.plan === "paid") {
+          setProfile(p => ({ ...p, plan: "paid" }));
+          clearInterval(poll);
+        }
+        if (attempts >= 10) clearInterval(poll);
+      }, 3000);
+    }
+  }, []);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -543,7 +569,7 @@ function Dashboard({ user, onLogout }) {
   return (
     <div className="app">
       <StyleInject />
-      {showPaywall && <Paywall onClose={() => setShowPaywall(false)} />}
+      {showPaywall && <Paywall onClose={() => setShowPaywall(false)} user={user} />}
       <aside className="sidebar">
         <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
@@ -559,6 +585,12 @@ function Dashboard({ user, onLogout }) {
       </aside>
 
       <main className="main">
+        {paymentSuccess && (
+          <div style={{ background:"#0d9488",color:"white",padding:"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
+            <span>🎉 <strong>Welcome to Pro!</strong> Your account has been upgraded. It may take a few seconds to activate.</span>
+            <button onClick={() => setPaymentSuccess(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
+          </div>
+        )}
         {!isPaid && (
           <div className="trial-banner">
             <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} reviews remaining</strong></span>
