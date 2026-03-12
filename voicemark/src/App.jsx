@@ -565,9 +565,13 @@ function Dashboard({ user, onLogout }) {
     if (!isPaid && total >= FREE_QUOTA) setShowPaywall(true);
   }, [total, isPaid]);
 
+  const [updatingId, setUpdatingId] = useState(null);
   const updateStatus = async (id, status) => {
+    if (updatingId) return;
+    setUpdatingId(id);
     const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
-    if (!error) fetchReviews();
+    if (!error) await fetchReviews();
+    setUpdatingId(null);
   };
 
   const copy = (text, key) => { navigator.clipboard.writeText(text).catch(() => {}); setCopiedKey(key); setTimeout(() => setCopiedKey(""), 2000); };
@@ -642,8 +646,8 @@ function Dashboard({ user, onLogout }) {
                       </div>
                       {r.status === "pending" && (
                         <div className="rc-actions">
-                          <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")}>✓ Approve</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")}>✕ Reject</button>
+                          <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={updatingId===r.id}>{updatingId===r.id ? "..." : "✓ Approve"}</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={updatingId===r.id}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
                         </div>
                       )}
                     </div>
@@ -863,17 +867,14 @@ function TermsOfService() {
 export default function App() {
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
-  if (collectMatch) {
-    return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
-  }
-  if (path === "/privacy") return <><StyleInject /><PrivacyPolicy /></>;
-  if (path === "/terms") return <><StyleInject /><TermsOfService /></>;
+  const isStaticRoute = !!collectMatch || path === "/privacy" || path === "/terms";
 
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    if (isStaticRoute) return;
     // Check if this is a password recovery redirect from Supabase email link
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
@@ -907,6 +908,9 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  if (collectMatch) return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
+  if (path === "/privacy") return <><StyleInject /><PrivacyPolicy /></>;
+  if (path === "/terms") return <><StyleInject /><TermsOfService /></>;
   if (checking) return <><StyleInject /><div className="loading" style={{ minHeight:"100vh" }}>Loading...</div></>;
 
   const auth = u => { setUser(u); setScreen("app"); };
