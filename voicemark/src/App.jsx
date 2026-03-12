@@ -148,7 +148,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .empty p{font-size:14px;margin-bottom:24px}
 .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;max-width:560px;margin-bottom:20px}
 .settings-card h3{font-size:16px;font-weight:600;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
 .stat-val{font-family:'Fraunces',serif;font-size:36px;font-weight:300;margin-bottom:4px}
 .stat-label{font-size:13px;color:var(--muted)}
@@ -164,6 +164,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
   .hero{padding:40px 20px}
   .how-steps,.widget-grid,.stats-row{grid-template-columns:1fr}
   .how-section,.widget-preview-section,.pricing-section{padding:48px 20px}
+  .legal-content{padding:40px 20px 64px!important}
   .faq-section{padding:48px 20px}
   .pricing-card{min-width:0;width:100%}
   .app{flex-direction:column}
@@ -358,7 +359,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         <div className="auth-logo" onClick={onHome}>Voice<span>mark</span></div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
-        {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} /></div>}
+        {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} maxLength={60} onKeyDown={e => e.key==="Enter" && go()} /></div>}
         <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
         <div className="field">
           <label style={{ display:"flex", justifyContent:"space-between" }}>
@@ -505,7 +506,7 @@ function Dashboard({ user, onLogout }) {
   const [viewCollect, setViewCollect] = useState(false);
   const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
-  const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
+  const collectUrl = profile?.slug ? `www.voicemark.co/collect/${profile.slug}` : null;
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -518,10 +519,12 @@ function Dashboard({ user, onLogout }) {
     if (!saveCompany.trim()) { setSaveMsg("Company name cannot be empty"); return; }
     setSaving(true); setSaveMsg("");
     try {
-      const newSlugVal = newSlug(saveCompany.trim()) + "-" + Date.now().toString(36);
-      const { error } = await supabase.from("profiles").update({ company: saveCompany.trim(), slug: newSlugVal }).eq("id", user.id);
+      const companyChanged = saveCompany.trim() !== profile?.company;
+      const updates = { company: saveCompany.trim() };
+      if (companyChanged) updates.slug = newSlug(saveCompany.trim()) + "-" + Date.now().toString(36);
+      const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
       if (error) { setSaveMsg("Something went wrong. Try again."); }
-      else { setProfile(p => ({ ...p, company: saveCompany.trim(), slug: newSlugVal })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
+      else { setProfile(p => ({ ...p, ...updates })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
     } catch(e) { setSaveMsg("Something went wrong. Try again."); }
     setSaving(false);
   };
@@ -557,9 +560,12 @@ function Dashboard({ user, onLogout }) {
 
   const fetchReviews = async (showLoader = false) => {
     if (showLoader) setLoading(true);
-    const { data } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setReviews(data || []);
-    setLoading(false);
+    try {
+      const { data } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      setReviews(data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const total = reviews.filter(r => r.status !== "rejected").length;
@@ -644,6 +650,7 @@ function Dashboard({ user, onLogout }) {
                 <div className="stat-card"><div className="stat-val">{totalAll}</div><div className="stat-label">Total reviews</div></div>
                 <div className="stat-card"><div className="stat-val">{approved}</div><div className="stat-label">Published</div></div>
                 <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
+                <div className="stat-card"><div className="stat-val">{avgRating}</div><div className="stat-label">Avg. rating</div></div>
               </div>}
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
                 <div className="empty">
@@ -688,9 +695,9 @@ function Dashboard({ user, onLogout }) {
               <div className="settings-card">
                 <h3>Add to your website</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Paste this one line of code anywhere on your website. The widget updates automatically when you approve new reviews.</p>
-                <div className="embed-box">
+                <div className="embed-box" style={{ cursor:"pointer" }} onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`, "embed")}>
                   <code>{`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`}</code>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`, "embed")}>{copiedKey==="embed" ? "✓ Copied!" : "Copy code"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`, "embed"); }}>{copiedKey==="embed" ? "✓ Copied!" : "Copy code"}</button>
                 </div>
               </div>
               <div className="settings-card">
@@ -721,8 +728,8 @@ function Dashboard({ user, onLogout }) {
                 <h3>Your collection link</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
-                  <span className="link-url">https://{collectUrl}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")} disabled={!profile?.slug}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
+                  <span className="link-url" style={{ color: collectUrl ? "var(--teal)" : "var(--muted)" }}>{collectUrl ? `https://${collectUrl}` : "Generating your link..."}</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")} disabled={!collectUrl}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -731,10 +738,10 @@ function Dashboard({ user, onLogout }) {
                 <div style={{ background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--r)",padding:16,fontSize:14,lineHeight:1.8,color:"#3a3630" }}>
                   Hi [Name],<br /><br />
                   It was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:<br />
-                  <span style={{ color:"var(--teal)" }}>https://{collectUrl}</span><br /><br />
+                  <span style={{ color:"var(--teal)" }}>{collectUrl ? `https://${collectUrl}` : "your link"}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, "email")} disabled={!profile?.slug}>{copiedKey==="email" ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, "email")} disabled={!collectUrl}>{copiedKey==="email" ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
@@ -822,7 +829,7 @@ function LegalPage({ title, children }) {
           <a href="/" className="btn btn-ghost">← Back to home</a>
         </div>
       </nav>
-      <div style={{ maxWidth:720, margin:"0 auto", padding:"64px 48px 96px" }}>
+      <div className="legal-content" style={{ maxWidth:720, margin:"0 auto", padding:"64px 48px 96px" }}>
         <h1 style={{ fontSize:36, fontWeight:300, marginBottom:8 }}>{title}</h1>
         <p style={{ color:"var(--muted)", fontSize:13, marginBottom:48 }}>Last updated: March 2026</p>
         <div style={{ fontSize:15, lineHeight:1.8, color:"#3a3630" }}>{children}</div>
@@ -894,7 +901,7 @@ export default function App() {
 
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(!isStaticRoute);
 
   useEffect(() => {
     if (isStaticRoute) return;
