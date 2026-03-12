@@ -8,7 +8,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const FREE_QUOTA = 3;
 const newSlug = (company) => company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
-const today = () => new Date().toISOString().split("T")[0];
 
 const G = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Epilogue:wght@300;400;500;600&display=swap');
@@ -313,7 +312,14 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
       if (mode === "signup") {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
-        if (error) { setErr(error.message); setLoading(false); return; }
+        if (error) {
+          if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
+            setErr("An account with this email already exists. Try logging in instead.");
+          } else {
+            setErr(error.message);
+          }
+          setLoading(false); return;
+        }
         let slug = newSlug(f.company) || data.user.id.slice(0, 8);
         const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).neq("id", data.user.id).single();
         if (existing) slug = slug + "-" + data.user.id.slice(0, 6);
@@ -382,7 +388,7 @@ function Paywall({ onClose }) {
     const onKey = e => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onKey); };
-  }, []);
+  }, [onClose]);
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -489,11 +495,14 @@ function Dashboard({ user, onLogout }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [viewCollect, setViewCollect] = useState(false);
 
   const [profile, setProfile] = useState(user.profile);
   const [updatingId, setUpdatingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [saveMsg, setSaveMsg] = useState("");
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
@@ -540,14 +549,14 @@ function Dashboard({ user, onLogout }) {
   };
 
   const deleteReview = async (id) => {
-    if (!window.confirm("Delete this review permanently?")) return;
     setUpdatingId(id);
     await supabase.from("reviews").delete().eq("id", id).eq("user_id", user.id);
     setReviews(prev => prev.filter(r => r.id !== id));
+    setConfirmDeleteId(null);
     setUpdatingId(null);
   };
 
-  const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const copy = (text, setter) => { navigator.clipboard.writeText(text).catch(() => {}); setter(true); setTimeout(() => setter(false), 2000); };
 
   const saveProfile = async () => {
     if (!companyInput.trim()) { setSaveMsg("Company name is required"); setTimeout(() => setSaveMsg(""), 2000); return; }
@@ -570,7 +579,6 @@ function Dashboard({ user, onLogout }) {
 
   return (
     <div className="app">
-      <StyleInject />
       {showPaywall && <Paywall onClose={() => setShowPaywall(false)} />}
       <aside className="sidebar">
         <div className="s-logo">Voice<span>mark</span></div>
@@ -591,7 +599,7 @@ function Dashboard({ user, onLogout }) {
           <div className="trial-banner" style={total >= FREE_QUOTA ? {background:"#fef3c7",borderBottomColor:"#f59e0b"} : {}}>
             {total >= FREE_QUOTA
               ? <span>⚠️ <strong>Review limit reached</strong> · Upgrade to keep collecting</span>
-              : <span>Free plan · <strong>{FREE_QUOTA - total} of {FREE_QUOTA} reviews remaining</strong></span>
+              : <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} of {FREE_QUOTA} reviews remaining</strong></span>
             }
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
           </div>
@@ -638,7 +646,14 @@ function Dashboard({ user, onLogout }) {
                           </>}
                           {r.status === "approved" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>↩ Move to pending</button>}
                           {r.status === "rejected" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>↩ Restore</button>}
-                          <button className="btn btn-ghost btn-sm" style={{color:"#dc2626",fontSize:12}} onClick={() => deleteReview(r.id)} disabled={!!updatingId}>🗑 Delete</button>
+                          {confirmDeleteId === r.id
+                            ? <>
+                                <span style={{ fontSize:12,color:"#dc2626" }}>Delete permanently?</span>
+                                <button className="btn btn-danger btn-sm" onClick={() => deleteReview(r.id)} disabled={!!updatingId}>Yes, delete</button>
+                                <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                              </>
+                            : <button className="btn btn-ghost btn-sm" style={{color:"#dc2626",fontSize:12}} onClick={() => setConfirmDeleteId(r.id)} disabled={!!updatingId}>🗑 Delete</button>
+                          }
                         </div>
                     </div>
                   ))}
@@ -657,7 +672,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Paste this one line of code anywhere on your website. The widget updates automatically when you approve new reviews.</p>
                 <div className="embed-box">
                   <code>{`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`}</code>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`)}>{copied ? "✓ Copied!" : "Copy code"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`, setCopiedEmbed)}>{copiedEmbed ? "✓ Copied!" : "Copy code"}</button>
                 </div>
               </div>
               <div className="settings-card">
@@ -689,7 +704,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
                   <span className="link-url">{`https://${collectUrl}`}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`)}>{copied ? "✓ Copied!" : "Copy link"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, setCopiedLink)}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -701,7 +716,7 @@ function Dashboard({ user, onLogout }) {
                   <span style={{ color:"var(--teal)" }}>{`https://${collectUrl}`}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`)}>{copied ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, setCopiedEmail)}>{copiedEmail ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
