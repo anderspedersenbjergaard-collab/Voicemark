@@ -314,7 +314,9 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) { setErr(error.message); setLoading(false); return; }
-        const slug = newSlug(f.company);
+        let slug = newSlug(f.company) || data.user.id.slice(0, 8);
+        const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).single();
+        if (existing) slug = slug + "-" + data.user.id.slice(0, 6);
         await supabase.from("profiles").insert({ id: data.user.id, company: f.company, slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
@@ -428,6 +430,11 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
+    const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
+    const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
+    if (ownerProfile?.plan !== "paid" && count >= FREE_QUOTA) {
+      setErr("This collection page has reached its review limit."); setLoading(false); return;
+    }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
@@ -490,7 +497,12 @@ function Dashboard({ user, onLogout }) {
   useEffect(() => {
     if (!profile?.slug) {
       supabase.from("profiles").select("*").eq("id", user.id).single()
-        .then(({ data }) => { if (data) setProfile(data); });
+        .then(({ data }) => {
+          if (data) {
+            setProfile(data);
+            setCompanyInput(data.company || "");
+          }
+        });
     }
   }, [user.id]);
 
@@ -512,17 +524,19 @@ function Dashboard({ user, onLogout }) {
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
   const pending = reviews.filter(r => r.status === "pending").length;
-  const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
+  const avgRating = total ? +(reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
   const updateStatus = async (id, status) => {
-    await supabase.from("reviews").update({ status }).eq("id", id);
+    setUpdatingId(id);
+    await supabase.from("reviews").update({ status }).eq("id", id).eq("user_id", user.id);
+    setUpdatingId(null);
     fetchReviews();
   };
 
   const deleteReview = async (id) => {
     if (!window.confirm("Delete this review permanently?")) return;
     setUpdatingId(id);
-    await supabase.from("reviews").delete().eq("id", id);
+    await supabase.from("reviews").delete().eq("id", id).eq("user_id", user.id);
     setReviews(prev => prev.filter(r => r.id !== id));
     setUpdatingId(null);
   };
@@ -530,7 +544,7 @@ function Dashboard({ user, onLogout }) {
   const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const saveProfile = async () => {
-    if (!companyInput.trim()) { setSaveMsg("Name can't be empty"); setTimeout(() => setSaveMsg(""), 2000); return; }
+    if (!companyInput.trim()) { setSaveMsg("Company name is required"); setTimeout(() => setSaveMsg(""), 2000); return; }
     const { data } = await supabase.from("profiles").update({ company: companyInput }).eq("id", user.id).select().single();
     if (data) { setProfile(data); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
   };
@@ -567,8 +581,11 @@ function Dashboard({ user, onLogout }) {
 
       <main className="main">
         {!isPaid && (
-          <div className="trial-banner">
-            <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} reviews remaining</strong></span>
+          <div className="trial-banner" style={total >= FREE_QUOTA ? {background:"#fef3c7",borderBottomColor:"#f59e0b"} : {}}>
+            {total >= FREE_QUOTA
+              ? <span>⚠️ <strong>Review limit reached</strong> · Upgrade to keep collecting</span>
+              : <span>Free plan · <strong>{FREE_QUOTA - total} of {FREE_QUOTA} reviews remaining</strong></span>
+            }
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
           </div>
         )}
@@ -604,7 +621,7 @@ function Dashboard({ user, onLogout }) {
                         </div>
                         <div style={{ display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
                           <span className={`status-pill pill-${r.status}`}>{r.status}</span>
-                          <span className="rc-date">{r.created_at?.split("T")[0]}</span>
+                          <span className="rc-date">{r.created_at ? new Date(r.created_at).toLocaleDateString("nb-NO", { day:"numeric", month:"short", year:"numeric" }) : ""}</span>
                         </div>
                       </div>
                       <div className="rc-actions">
