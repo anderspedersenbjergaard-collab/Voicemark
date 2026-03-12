@@ -162,7 +162,8 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
   .hero{padding:40px 20px}
-  .how-steps,.widget-grid,.stats-row{grid-template-columns:1fr}
+  .how-steps,.widget-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
   .how-section,.widget-preview-section,.pricing-section{padding:48px 20px}
   .legal-content{padding:40px 20px 64px!important}
   .faq-section{padding:48px 20px}
@@ -347,7 +348,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
           <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && sendReset()} /></div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={sendReset} disabled={loading}>{loading ? "Sending..." : "Send reset link →"}</button>
-          <div className="auth-switch"><button onClick={() => setForgotMode(false)}>Back to log in</button></div>
+          <div className="auth-switch"><button onClick={() => { setForgotMode(false); setErr(""); }}>Back to log in</button></div>
         </>}
       </div>
     </div>
@@ -476,7 +477,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
             ))}
           </div>
           <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10 }}>
             <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
             <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
           </div>
@@ -592,7 +593,7 @@ function Dashboard({ user, onLogout }) {
     if (updatingId) return;
     setUpdatingId(id);
     const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
-    if (!error) await fetchReviews();
+    await fetchReviews();
     setUpdatingId(null);
   };
 
@@ -619,7 +620,7 @@ function Dashboard({ user, onLogout }) {
           ))}
         </nav>
         <div className="s-bottom">
-          <div style={{ marginBottom:4 }}>{profile?.company}</div>
+          <div style={{ marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{profile?.company}</div>
           <div style={{ marginBottom:10, wordBreak:"break-all" }}>{user.email}</div>
           <button className="btn btn-ghost btn-sm" style={{ color:"#7a756e",borderColor:"#222",width:"100%" }} onClick={onLogout}>Log out</button>
         </div>
@@ -632,7 +633,7 @@ function Dashboard({ user, onLogout }) {
             <button onClick={() => setPaymentSuccess(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
           </div>
         )}
-        {!isPaid && (
+        {!isPaid && !loading && (
           <div className="trial-banner">
             <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} reviews remaining</strong></span>
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
@@ -809,7 +810,7 @@ function ResetPassword({ onDone }) {
         </> : <>
           <h2>Set new password</h2>
           <p className="auth-sub">Choose a strong password for your account</p>
-          <div className="field"><label>New password</label><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} /></div>
+          <div className="field"><label>New password</label><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
           <div className="field"><label>Confirm password</label><input type="password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Saving..." : "Set new password →"}</button>
@@ -895,6 +896,7 @@ function TermsOfService() {
 
 // ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
+  document.title = "Voicemark – Collect client testimonials";
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
   const isStaticRoute = !!collectMatch || path === "/privacy" || path === "/terms";
