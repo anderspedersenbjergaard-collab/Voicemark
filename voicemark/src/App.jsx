@@ -315,7 +315,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) { setErr(error.message); setLoading(false); return; }
         let slug = newSlug(f.company) || data.user.id.slice(0, 8);
-        const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).single();
+        const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).neq("id", data.user.id).single();
         if (existing) slug = slug + "-" + data.user.id.slice(0, 6);
         await supabase.from("profiles").insert({ id: data.user.id, company: f.company, slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
