@@ -168,9 +168,12 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
   .legal-content{padding:40px 20px 64px!important}
   .faq-section{padding:48px 20px}
   .pricing-card{min-width:0;width:100%}
+  .auth-card{padding:32px 24px}
+  .collect-card{padding:28px 20px}
   .app{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative}
   .content{padding:20px}
+  .topbar{padding:14px 20px}
 }
 `;
 
@@ -476,7 +479,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
+          <div className="field"><label>Your review</label><textarea placeholder="Share your experience working together..." value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10 }}>
             <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
             <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
@@ -510,6 +513,7 @@ function Dashboard({ user, onLogout }) {
   const collectUrl = profile?.slug ? `www.voicemark.co/collect/${profile.slug}` : null;
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [planConfirmed, setPlanConfirmed] = useState(false);
 
   const [saveCompany, setSaveCompany] = useState(profile?.company || "");
   useEffect(() => { if (profile?.company) setSaveCompany(profile.company); }, [profile?.company]);
@@ -551,9 +555,10 @@ function Dashboard({ user, onLogout }) {
         const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
         if (data?.plan === "paid") {
           setProfile(p => ({ ...p, plan: "paid" }));
+          setPlanConfirmed(true);
           clearInterval(poll);
         }
-        if (attempts >= 10) clearInterval(poll);
+        if (attempts >= 10) { clearInterval(poll); setPaymentSuccess(false); }
       }, 3000);
       return () => clearInterval(poll);
     }
@@ -587,6 +592,11 @@ function Dashboard({ user, onLogout }) {
   useEffect(() => {
     if (!isPaid && total >= FREE_QUOTA && !paywallDismissed) setShowPaywall(true);
   }, [total, isPaid, paywallDismissed]);
+
+  useEffect(() => {
+    document.body.style.overflow = showPaywall ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showPaywall]);
 
   const [updatingId, setUpdatingId] = useState(null);
   const updateStatus = async (id, status) => {
@@ -675,12 +685,14 @@ function Dashboard({ user, onLogout }) {
                           <span className="rc-date">{r.created_at ? new Date(r.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : ""}</span>
                         </div>
                       </div>
-                      {r.status === "pending" && (
-                        <div className="rc-actions">
+                      <div className="rc-actions">
+                        {r.status === "pending" && <>
                           <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✓ Approve"}</button>
                           <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
-                        </div>
-                      )}
+                        </>}
+                        {r.status === "approved" && <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "Move to pending"}</button>}
+                        {r.status === "rejected" && <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "Restore"}</button>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -757,7 +769,7 @@ function Dashboard({ user, onLogout }) {
                 <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} maxLength={60} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
                 {saveMsg && <p style={{ fontSize:13, color: saveMsg.startsWith("✓") ? "var(--teal)" : "#dc2626", marginBottom:10 }}>{saveMsg}</p>}
-                <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+                <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving || saveCompany.trim() === (profile?.company || "")}>{saving ? "Saving..." : "Save changes"}</button>
               </div>
               <div className="settings-card">
                 <h3>Subscription</h3>
@@ -896,7 +908,7 @@ function TermsOfService() {
 
 // ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
-  document.title = "Voicemark – Collect client testimonials";
+  useEffect(() => { document.title = "Voicemark – Collect client testimonials"; }, []);
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
   const isStaticRoute = !!collectMatch || path === "/privacy" || path === "/terms";
