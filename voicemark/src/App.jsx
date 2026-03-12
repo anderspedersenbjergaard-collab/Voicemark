@@ -806,7 +806,7 @@ function Dashboard({ user, onLogout }) {
               <div className="settings-card">
                 <h3>Subscription</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>
-                  {isPaid ? "You're on the Pro plan ($19/mo)." : FREE_QUOTA - total > 0 ? `Free plan · ${FREE_QUOTA - total} of ${FREE_QUOTA} review${FREE_QUOTA - total !== 1 ? "s" : ""} remaining.` : "Free limit reached. Upgrade to keep collecting."}
+                  {isPaid ? "You are on the Pro plan ($19/mo)." : FREE_QUOTA - total > 0 ? "Free plan - " + (FREE_QUOTA - total) + " of " + FREE_QUOTA + " review" + (FREE_QUOTA - total !== 1 ? "s" : "") + " remaining." : "Free limit reached. Upgrade to keep collecting."}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
                 {isPaid && (
