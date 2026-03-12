@@ -428,6 +428,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
+    try {
     // Check if owner is on free plan and has hit quota
     const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
     if (ownerProfile?.plan !== "paid") {
@@ -438,10 +439,11 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
         return;
       }
     }
-    const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
+    const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name.trim(), role: f.role.trim(), text: f.text.trim(), rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
     if (onDone) setTimeout(onDone, 2000);
+    } catch(e) { setErr("Something went wrong. Please try again."); setLoading(false); }
   };
 
   if (profileLoading) return <div className="collect-page"><div className="loading">Loading...</div></div>;
@@ -502,10 +504,12 @@ function Dashboard({ user, onLogout }) {
   const saveProfile = async () => {
     if (!saveCompany.trim()) { setSaveMsg("Company name cannot be empty"); return; }
     setSaving(true); setSaveMsg("");
-    const newSlugVal = newSlug(saveCompany.trim()) + "-" + Date.now().toString(36);
-    const { error } = await supabase.from("profiles").update({ company: saveCompany.trim(), slug: newSlugVal }).eq("id", user.id);
-    if (error) { setSaveMsg("Something went wrong. Try again."); }
-    else { setProfile(p => ({ ...p, company: saveCompany.trim(), slug: newSlugVal })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
+    try {
+      const newSlugVal = newSlug(saveCompany.trim()) + "-" + Date.now().toString(36);
+      const { error } = await supabase.from("profiles").update({ company: saveCompany.trim(), slug: newSlugVal }).eq("id", user.id);
+      if (error) { setSaveMsg("Something went wrong. Try again."); }
+      else { setProfile(p => ({ ...p, company: saveCompany.trim(), slug: newSlugVal })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
+    } catch(e) { setSaveMsg("Something went wrong. Try again."); }
     setSaving(false);
   };
 
@@ -669,7 +673,7 @@ function Dashboard({ user, onLogout }) {
                       <div className="t-stars">{stars(r.rating)}</div>
                       <div className="t-text">"{r.text}"</div>
                       <div className="t-author">
-                        <div className="t-avatar" style={{ background:"var(--teal)" }}>{r.name[0]}</div>
+                        <div className="t-avatar" style={{ background:"var(--teal)" }}>{r.name?.[0] || "?"}</div>
                         <div><div className="t-name">{r.name}</div><div className="t-role">{r.role}</div></div>
                       </div>
                     </div>
