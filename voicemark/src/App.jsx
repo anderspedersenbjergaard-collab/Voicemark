@@ -510,7 +510,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
           <div className="success-card">
             <div className="success-icon">🎉</div>
             <h2 style={{ marginBottom:8 }}>Thank you!</h2>
-            <p style={{ color:"var(--muted)", fontSize:14, marginBottom: onDone ? 0 : 20 }}>Your review has been submitted and will appear on {company ? (company.endsWith("s") ? `${company}'` : `${company}'s`) : "their"} website shortly.</p>
+            <p style={{ color:"var(--muted)", fontSize:14, marginBottom: onDone ? 0 : 20 }}>Your review has been submitted and will appear on {company ? company + (company.endsWith("s") ? "’" : "’s") : "their"} website shortly.</p>
             {!onDone && <button className="btn btn-ghost btn-sm" onClick={() => { setSubmitted(false); setRating(0); setF({name:"",role:"",text:""}); setErr(""); }}>Leave another review</button>}
           </div>
         )}
