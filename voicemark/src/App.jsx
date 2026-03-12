@@ -382,8 +382,8 @@ function Paywall({ onClose, user }) {
   stripeUrl.searchParams.set("success_url", "https://www.voicemark.co?payment=success");
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
         <h2>Free reviews used up</h2>
         <p>You've used your 3 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
         <div className="m-price">$19 <span>/ month</span></div>
@@ -447,6 +447,15 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
   };
 
   if (profileLoading) return <div className="collect-page"><div className="loading">Loading...</div></div>;
+  if (err && !userId) return (
+    <div className="collect-page">
+      <div className="collect-card" style={{ textAlign:"center" }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>🔍</div>
+        <h2 style={{ marginBottom:8 }}>Page not found</h2>
+        <p style={{ color:"var(--muted)", fontSize:14 }}>This collection link doesn't exist or has been removed.</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="collect-page">
@@ -558,6 +567,9 @@ function Dashboard({ user, onLogout }) {
 
   useEffect(() => {
     fetchReviews(true);
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => { if (!viewCollect) fetchReviews(); }, 10000);
     return () => clearInterval(interval);
   }, [viewCollect]);
