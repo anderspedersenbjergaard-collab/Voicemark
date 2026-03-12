@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
@@ -123,7 +123,6 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .star-btn{font-size:32px;cursor:pointer;transition:transform .15s;filter:grayscale(1) opacity(.35);background:none;border:none;padding:0}
 .star-btn.on{filter:none;transform:scale(1.1)}
 .collect-footer{margin-top:24px;text-align:center;font-size:12px;color:var(--muted)}
-.collect-footer span{color:var(--teal)}
 .success-card{text-align:center;padding:20px 0}
 .success-icon{font-size:48px;margin-bottom:16px}
 .reviews-list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
@@ -395,6 +394,11 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
 
 // ── PAYWALL ────────────────────────────────────────────────────────────────
 function Paywall({ onClose, user }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const stripeUrl = new URL("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01");
   if (user?.email) stripeUrl.searchParams.set("prefilled_email", user.email);
   if (user?.id) stripeUrl.searchParams.set("client_reference_id", user.id);
@@ -444,7 +448,9 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
 
   const submit = async () => {
     if (loading) return;
-    if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
+    if (!rating) { setErr("Please select a star rating"); return; }
+    if (!f.name.trim()) { setErr("Please enter your name"); return; }
+    if (!f.text.trim()) { setErr("Please write a short review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
     try {
@@ -597,7 +603,8 @@ function Dashboard({ user, onLogout }) {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => { if (!viewCollect) fetchReviews(); }, 10000);
+    const tick = () => { if (!viewCollect && document.visibilityState === "visible") fetchReviews(); };
+    const interval = setInterval(tick, 10000);
     return () => clearInterval(interval);
   }, [viewCollect]);
 
@@ -617,6 +624,12 @@ function Dashboard({ user, onLogout }) {
     const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
     await fetchReviews();
     setUpdatingId(null);
+  };
+
+  const deleteReview = async (id) => {
+    if (!window.confirm("Permanently delete this review? This cannot be undone.")) return;
+    await supabase.from("reviews").delete().eq("id", id);
+    await fetchReviews();
   };
 
   const copy = (text, key) => {
@@ -698,7 +711,7 @@ function Dashboard({ user, onLogout }) {
                         </div>
                         <div style={{ display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
                           <span className={`status-pill pill-${r.status}`}>{r.status}</span>
-                          <span className="rc-date">{r.created_at ? new Date(r.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : ""}</span>
+                          <span className="rc-date">{r.created_at ? new Date(r.created_at).toLocaleDateString("nb-NO",{day:"numeric",month:"short",year:"numeric"}) : ""}</span>
                         </div>
                       </div>
                       <div className="rc-actions">
@@ -707,7 +720,10 @@ function Dashboard({ user, onLogout }) {
                           <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
                         </>}
                         {r.status === "approved" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "↩ Move to pending"}</button>}
-                        {r.status === "rejected" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "↩ Restore"}</button>}
+                        {r.status === "rejected" && <>
+                          <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "↩ Restore"}</button>
+                          <button className="btn btn-ghost btn-sm" style={{color:"#dc2626",fontSize:12}} onClick={() => deleteReview(r.id)} disabled={!!updatingId}>🗑 Delete</button>
+                        </>
                       </div>
                     </div>
                   ))}
@@ -924,6 +940,23 @@ function TermsOfService() {
 }
 
 // ── ROOT ───────────────────────────────────────────────────────────────────
+function ErrorFallback() {
+  return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,padding:32,textAlign:"center",fontFamily:"'Epilogue',sans-serif"}}>
+      <div style={{fontSize:40}}>😕</div>
+      <h2 style={{fontFamily:"'Fraunces',serif",fontWeight:300,fontSize:24}}>Something went wrong</h2>
+      <p style={{color:"#8a857d",fontSize:14,maxWidth:360}}>An unexpected error occurred. Try refreshing the page — your data is safe.</p>
+      <button onClick={() => window.location.reload()} style={{padding:"10px 20px",background:"#0d9488",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:14}}>Refresh page</button>
+    </div>
+  );
+}
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { crashed: false }; }
+  static getDerivedStateFromError() { return { crashed: true }; }
+  render() { return this.state.crashed ? <ErrorFallback /> : this.props.children; }
+}
+
 export default function App() {
   useEffect(() => { document.title = "Voicemark – Collect client testimonials"; }, []);
   const path = window.location.pathname;
@@ -978,13 +1011,13 @@ export default function App() {
   const logout = async () => { await supabase.auth.signOut(); setUser(null); setScreen("landing"); };
 
   return (
-    <>
+    <ErrorBoundary>
       <StyleInject />
       {screen === "app" && user && <Dashboard user={user} onLogout={logout} />}
       {screen === "login" && <Auth mode="login" onAuth={auth} onSwitch={() => setScreen("signup")} onHome={() => setScreen("landing")} />}
       {screen === "signup" && <Auth mode="signup" onAuth={auth} onSwitch={() => setScreen("login")} onHome={() => setScreen("landing")} />}
       {screen === "reset" && <ResetPassword onDone={() => setScreen("login")} />}
       {screen === "landing" && <Landing onSignup={() => setScreen("signup")} onLogin={() => setScreen("login")} />}
-    </>
+    </ErrorBoundary>
   );
 }
