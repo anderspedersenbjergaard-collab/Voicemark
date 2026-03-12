@@ -19,6 +19,7 @@ const G = `
   --teal-dim:#f0fdfa;--r:8px;--shadow:0 2px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.1);
 }
 body{background:var(--bg);color:var(--ink);font-family:'Epilogue',sans-serif;font-size:15px;line-height:1.6}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:2px}
 h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--r);font-family:'Epilogue',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent}
 .btn-primary{background:var(--teal);color:white;border-color:var(--teal)}
@@ -84,7 +85,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .field label{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .field input,.field textarea,.field select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:'Epilogue',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);transition:border-color .15s}
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--teal);background:white}
-.field textarea{resize:vertical;min-height:80px}
+.field textarea{resize:vertical;min-height:100px}
 .auth-switch{margin-top:20px;text-align:center;font-size:13px;color:var(--muted)}
 .auth-switch button{background:none;border:none;color:var(--teal);cursor:pointer;font-size:13px;font-weight:500}
 .err{color:#dc2626;font-size:13px;margin-bottom:12px;padding:10px 14px;background:#fef2f2;border-radius:var(--r);border:1px solid #fecaca}
@@ -129,7 +130,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .review-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
 .rc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .rc-stars{color:#d97706;font-size:14px;margin-bottom:6px}
-.rc-text{font-size:14px;color:#3a3630;line-height:1.65;margin-bottom:10px}
+.rc-text{font-size:14px;color:#3a3630;line-height:1.65;margin-bottom:10px;overflow-wrap:break-word;word-break:break-word}
 .rc-author{font-size:13px;font-weight:500}
 .rc-role{font-size:12px;color:var(--muted)}
 .rc-date{font-size:12px;color:var(--muted);flex-shrink:0}
@@ -173,6 +174,11 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
   .collect-card{padding:28px 20px}
   .app{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative}
+  .s-nav{display:flex;flex-direction:row;flex-wrap:wrap;padding:8px}
+  .s-item{flex:1;min-width:80px;padding:10px 8px;flex-direction:column;gap:4px;font-size:12px;border-left:none;border-bottom:2px solid transparent;justify-content:center;text-align:center}
+  .s-item.active{border-left-color:transparent;border-bottom-color:var(--teal)}
+  .s-bottom{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .main{height:auto}
   .content{padding:20px}
   .topbar{padding:14px 20px}
 }
@@ -365,7 +371,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         <div className="auth-logo" onClick={onHome}>Voice<span>mark</span></div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
-        {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} maxLength={60} onKeyDown={e => e.key==="Enter" && go()} /></div>}
+        {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} maxLength={60} onKeyDown={e => e.key==="Enter" && go()} autoComplete="organization" /></div>}
         <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} autoComplete={mode==="login"?"username":"email"} /></div>
         <div className="field">
           <label style={{ display:"flex", justifyContent:"space-between" }}>
@@ -396,8 +402,8 @@ function Paywall({ onClose, user }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h2>Free reviews used up</h2>
-        <p>You've used your 3 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
+        <h2>Ready to go unlimited?</h2>
+        <p>You've collected your 3 free reviews. Upgrade to keep building your reputation with unlimited testimonials.</p>
         <div className="m-price">$19 <span>/ month</span></div>
         <ul className="m-features">
           {["Unlimited testimonials","Embeddable widget","Custom branding"].map(f => <li key={f}>{f}</li>)}
@@ -423,7 +429,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
   const [userId, setUserId] = useState(userIdProp || null);
   const [company, setCompany] = useState(companyProp || "");
   const [profileLoading, setProfileLoading] = useState(!!slug);
-  const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
+  const set = k => e => { setF(p => ({ ...p, [k]: e.target.value })); if (err) setErr(""); };
 
   // If rendered via URL (/collect/slug), look up profile from slug
   useEffect(() => {
@@ -478,12 +484,14 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
             <div className="cc-logo">{company?.[0] || "V"}</div>
             <div><h2>How was your experience?</h2><p>{company ? `${company} · ` : ""}Takes 60 seconds</p></div>
           </div>
-          <div className="star-row">
+          <div className="star-row" role="group" aria-label="Rating">
             {[1,2,3,4,5].map(n => (
-              <button key={n} className={`star-btn ${n<=(hover||rating)?"on":""}`}
-                onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
+              <button key={n} className={`star-btn ${n<=(hover||rating)?"on":""}`} aria-label={`${n} star${n>1?"s":""}`}
+                onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
+                onKeyDown={e => (e.key==="Enter"||e.key===" ") && setRating(n)}>★</button>
             ))}
           </div>
+          {(hover||rating) > 0 && <p style={{fontSize:13,color:"var(--muted)",marginBottom:8,marginTop:-12}}>{["","Terrible","Poor","Okay","Good","Excellent"][hover||rating]}</p>}
           <div className="field"><label style={{display:"flex",justifyContent:"space-between"}}><span>Your review</span><span style={{fontWeight:400,textTransform:"none",letterSpacing:0}}>{f.text.length}/600</span></label><textarea placeholder="Share your experience working together..." value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10 }}>
             <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} autoComplete="name" /></div>
@@ -496,7 +504,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
           <div className="success-card">
             <div className="success-icon">🎉</div>
             <h2 style={{ marginBottom:8 }}>Thank you!</h2>
-            <p style={{ color:"var(--muted)", fontSize:14, marginBottom: onDone ? 0 : 20 }}>Your review has been submitted and will appear on {company || "their"} website shortly.</p>
+            <p style={{ color:"var(--muted)", fontSize:14, marginBottom: onDone ? 0 : 20 }}>Your review has been submitted and will appear on {company ? (company.endsWith("s") ? `${company}'` : `${company}'s`) : "their"} website shortly.</p>
             {!onDone && <button className="btn btn-ghost btn-sm" onClick={() => { setSubmitted(false); setRating(0); setF({name:"",role:"",text:""}); setErr(""); }}>Leave another review</button>}
           </div>
         )}
@@ -560,7 +568,6 @@ function Dashboard({ user, onLogout }) {
         const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
         if (data?.plan === "paid") {
           setProfile(p => ({ ...p, plan: "paid" }));
-          setPlanConfirmed(true);
           clearInterval(poll);
         }
         if (attempts >= 10) { clearInterval(poll); setPaymentSuccess(false); }
@@ -650,7 +657,7 @@ function Dashboard({ user, onLogout }) {
         )}
         {!isPaid && !loading && (
           <div className="trial-banner">
-            <span>{FREE_QUOTA - total > 0 ? <>Free plan · <strong>{FREE_QUOTA - total} review{FREE_QUOTA - total !== 1 ? "s" : ""} remaining</strong></> : <strong>Free limit reached — upgrade to collect more</strong>}</span>
+            <span>{FREE_QUOTA - total > 0 ? <>Free plan · <strong>{FREE_QUOTA - total} review{FREE_QUOTA - total !== 1 ? "s" : ""} remaining</strong></> : <><strong>Free limit reached</strong> — upgrade to keep collecting</>}</span>
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
           </div>
         )}
@@ -670,9 +677,13 @@ function Dashboard({ user, onLogout }) {
               </div>}
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
                 <div className="empty">
+                  <div style={{fontSize:40,marginBottom:16}}>📬</div>
                   <h3>No reviews yet</h3>
-                  <p>Send your collection link to a happy client to get started.</p>
-                  <button className="btn btn-primary" onClick={() => setTab("collect")}>Get your collection link →</button>
+                  <p>Share your collection link with a happy client to get your first testimonial.</p>
+                  <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+                    <button className="btn btn-primary" onClick={() => setTab("collect")}>Get your collection link →</button>
+                    <button className="btn btn-ghost" onClick={() => setViewCollect(true)}>Preview collection page</button>
+                  </div>
                 </div>
               ) : (
                 <div className="reviews-list">
@@ -745,9 +756,9 @@ function Dashboard({ user, onLogout }) {
               <div className="settings-card">
                 <h3>Your collection link</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
-                <div className="link-box">
+                <div className="link-box" style={{cursor:collectUrl?"pointer":"default"}} onClick={() => collectUrl && copy(`https://${collectUrl}`, "link")}>
                   <span className="link-url" style={{ color: collectUrl ? "var(--teal)" : "var(--muted)" }}>{collectUrl ? `https://${collectUrl}` : "Generating your link..."}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")} disabled={!collectUrl}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); copy(`https://${collectUrl}`, "link"); }} disabled={!collectUrl}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -772,14 +783,14 @@ function Dashboard({ user, onLogout }) {
               <div className="settings-card">
                 <h3>Account</h3>
                 <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} maxLength={60} onKeyDown={e => e.key==="Enter" && saveProfile()} /></div>
-                <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
+                <div className="field"><label>Email</label><input defaultValue={user.email} disabled style={{opacity:.6,cursor:"not-allowed"}} /></div>
                 {saveMsg && <p style={{ fontSize:13, color: saveMsg.startsWith("✓") ? "var(--teal)" : "#dc2626", marginBottom:10 }}>{saveMsg}</p>}
                 <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving || saveCompany.trim() === (profile?.company || "")}>{saving ? "Saving..." : "Save changes"}</button>
               </div>
               <div className="settings-card">
                 <h3>Subscription</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>
-                  {isPaid ? "You're on the Pro plan ($19/mo)." : `Free plan · ${Math.max(0, FREE_QUOTA - total)} of ${FREE_QUOTA} free reviews remaining.`}
+                  {isPaid ? "You're on the Pro plan ($19/mo)." : FREE_QUOTA - total > 0 ? `Free plan · ${FREE_QUOTA - total} of ${FREE_QUOTA} review${FREE_QUOTA - total !== 1 ? "s" : ""} remaining.` : "Free limit reached. Upgrade to keep collecting."}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
                 {isPaid && (
