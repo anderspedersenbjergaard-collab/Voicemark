@@ -311,6 +311,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
       if (mode === "signup") {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) { setErr("Please enter a valid email address"); setLoading(false); return; }
+        if (f.password.length < 8) { setErr("Password must be at least 8 characters"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) {
           if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
@@ -399,7 +400,7 @@ function Paywall({ onClose }) {
           {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
         </ul>
         <button className="btn btn-primary btn-lg btn-full" style={{ marginBottom:10 }}
-          onClick={() => window.open("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01","_blank")}>
+          onClick={() => window.open("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01","_blank","noopener,noreferrer")}>
           Upgrade with Stripe →
         </button>
         <button className="btn btn-ghost btn-full" onClick={onClose}>Maybe later</button>
@@ -504,6 +505,7 @@ function Dashboard({ user, onLogout }) {
   const [tab, setTab] = useState("reviews");
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [copiedEmbed, setCopiedEmbed] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -531,23 +533,22 @@ function Dashboard({ user, onLogout }) {
     }
   }, [user.id]);
 
-  const fetchReviews = async () => {
-    setLoading(true);
+  const fetchReviews = async (silent = false) => {
+    if (silent) setRefreshing(true); else setLoading(true);
     const { data } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     setReviews(data || []);
-    setLoading(false);
+    if (silent) setRefreshing(false); else setLoading(false);
   };
 
   useEffect(() => {
     fetchReviews();
     const interval = setInterval(() => {
-      if (document.visibilityState !== "hidden") fetchReviews();
+      if (document.visibilityState !== "hidden") fetchReviews(true);
     }, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const total = reviews.length;
-  const approved = reviews.filter(r => r.status === "approved").length;
   const pending = reviews.filter(r => r.status === "pending").length;
   const avgRating = total ? +(reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
@@ -564,8 +565,12 @@ function Dashboard({ user, onLogout }) {
 
   const deleteReview = async (id) => {
     setUpdatingId(id);
-    await supabase.from("reviews").delete().eq("id", id).eq("user_id", user.id);
-    setReviews(prev => prev.filter(r => r.id !== id));
+    const { error } = await supabase.from("reviews").delete().eq("id", id).eq("user_id", user.id);
+    if (!error) {
+      setReviews(prev => prev.filter(r => r.id !== id));
+    } else {
+      fetchReviews(); // fallback: refetch on error
+    }
     setConfirmDeleteId(null);
     setUpdatingId(null);
   };
@@ -752,7 +757,7 @@ function Dashboard({ user, onLogout }) {
                   {isPaid ? "You are on the Pro plan ($19/mo)." : "Free plan - " + Math.max(0, FREE_QUOTA - total) + " of " + FREE_QUOTA + " free reviews remaining."}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
-                {isPaid && <button className="btn btn-ghost btn-sm" onClick={() => window.open("https://billing.stripe.com/p/login/8x23cv4Wd1Au5Gm5CG4AU00","_blank")}>Manage subscription →</button>}
+                {isPaid && <button className="btn btn-ghost btn-sm" onClick={() => window.open("https://billing.stripe.com/p/login/8x23cv4Wd1Au5Gm5CG4AU00","_blank","noopener,noreferrer")}>Manage subscription →</button>}
               </div>
             </div>
           </>
@@ -763,7 +768,7 @@ function Dashboard({ user, onLogout }) {
 }
 
 // ── RESET PASSWORD SCREEN ──────────────────────────────────────────────────
-function ResetPassword({ onDone }) {
+function ResetPassword({ onDone, onHome }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [err, setErr] = useState("");
@@ -783,7 +788,7 @@ function ResetPassword({ onDone }) {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-logo">Voice<span>mark</span></div>
+        <div className="auth-logo" onClick={onHome}>Voice<span>mark</span></div>
         {done ? <>
           <h2>Password updated!</h2>
           <p className="auth-sub">Redirecting you to log in...</p>
@@ -877,7 +882,7 @@ function App() {
       {screen === "app" && user && <Dashboard user={user} onLogout={logout} />}
       {screen === "login" && <Auth mode="login" onAuth={auth} onSwitch={() => setScreen("signup")} onHome={() => setScreen("landing")} />}
       {screen === "signup" && <Auth mode="signup" onAuth={auth} onSwitch={() => setScreen("login")} onHome={() => setScreen("landing")} />}
-      {screen === "reset" && <ResetPassword onDone={() => setScreen("login")} />}
+      {screen === "reset" && <ResetPassword onDone={() => setScreen("login")} onHome={() => setScreen("landing")} />}
       {screen === "landing" && <Landing onSignup={() => setScreen("signup")} onLogin={() => setScreen("login")} />}
     </>
   );
