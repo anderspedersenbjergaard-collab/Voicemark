@@ -314,6 +314,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         if (f.password.length < 6) { setErr("Password must be at least 6 characters"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) { setErr(error.message); setLoading(false); return; }
+        if (!data.user) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
         const slug = newSlug(f.company) + "-" + Date.now().toString(36);
         await supabase.from("profiles").upsert({ id: data.user.id, company: f.company, slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
@@ -537,8 +538,8 @@ function Dashboard({ user, onLogout }) {
     }
   }, []);
 
-  const fetchReviews = async () => {
-    setLoading(true);
+  const fetchReviews = async (showLoader = false) => {
+    if (showLoader) setLoading(true);
     const { data } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     setReviews(data || []);
     setLoading(false);
@@ -550,7 +551,7 @@ function Dashboard({ user, onLogout }) {
   const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
   useEffect(() => {
-    fetchReviews();
+    fetchReviews(true);
     const interval = setInterval(fetchReviews, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -560,8 +561,8 @@ function Dashboard({ user, onLogout }) {
   }, [total, isPaid]);
 
   const updateStatus = async (id, status) => {
-    await supabase.from("reviews").update({ status }).eq("id", id);
-    fetchReviews();
+    const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
+    if (!error) fetchReviews();
   };
 
   const copy = (text, key) => { navigator.clipboard.writeText(text).catch(() => {}); setCopiedKey(key); setTimeout(() => setCopiedKey(""), 2000); };
