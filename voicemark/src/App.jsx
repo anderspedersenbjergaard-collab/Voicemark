@@ -1,4 +1,4 @@
-import { useState, useEffect, Component } from "react";
+import { useState, useEffect, useRef, Component } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
@@ -61,7 +61,6 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .t-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
 .t-name{font-size:13px;font-weight:500}
 .t-role{font-size:12px;color:var(--muted)}
-.widget-code{background:var(--ink);color:#a8f0e8;font-family:monospace;font-size:13px;padding:16px 20px;border-radius:var(--r);margin-top:20px;text-align:center}
 .pricing-section{background:var(--ink);color:white;padding:72px 48px;text-align:center}
 .pricing-section h2{font-size:38px;font-weight:300;margin-bottom:10px}
 .pricing-section>p{color:#7a756e;margin-bottom:40px}
@@ -311,6 +310,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
     try {
       if (mode === "signup") {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) { setErr("Please enter a valid email address"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) {
           if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
@@ -323,7 +323,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         let slug = newSlug(f.company) || data.user.id.slice(0, 8);
         const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).neq("id", data.user.id).single();
         if (existing) slug = slug + "-" + data.user.id.slice(0, 6);
-        await supabase.from("profiles").insert({ id: data.user.id, company: f.company, slug, plan: "trial" });
+        await supabase.from("profiles").upsert({ id: data.user.id, company: f.company, slug, plan: "trial" }, { onConflict: "id" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
       } else {
@@ -416,6 +416,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const submittingRef = useRef(false);
   const [userId, setUserId] = useState(userIdProp || null);
   const [company, setCompany] = useState(companyProp || "");
   const [profileLoading, setProfileLoading] = useState(!!slug);
@@ -426,29 +427,38 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     if (!slug) return;
     supabase.from("profiles").select("id, company").eq("slug", slug).single()
       .then(({ data, error }) => {
-        if (data) { setUserId(data.id); setCompany(data.company); }
-        else { setErr("Collection page not found."); }
+        if (data) {
+          setUserId(data.id);
+          setCompany(data.company);
+          document.title = `Leave a review for ${data.company} · Voicemark`;
+        } else {
+          setErr("Collection page not found.");
+        }
         setProfileLoading(false);
       });
+    return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
   }, [slug]);
 
   const submit = async () => {
+    if (submittingRef.current) return;
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
+    submittingRef.current = true;
     setLoading(true); setErr("");
     const { data: rpcResult, error: rpcError } = await supabase.rpc("submit_review", {
       p_user_id: userId, p_name: f.name, p_role: f.role, p_text: f.text, p_rating: rating,
     });
-    if (rpcError) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
-    if (rpcResult?.error === "quota_exceeded") { setErr("This collection page has reached its review limit."); setLoading(false); return; }
-    if (rpcResult?.error === "profile_not_found") { setErr("Invalid collection link."); setLoading(false); return; }
-    if (!rpcResult?.ok) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
+    if (rpcError) { submittingRef.current = false; setErr("Something went wrong. Please try again."); setLoading(false); return; }
+    if (rpcResult?.error === "quota_exceeded") { submittingRef.current = false; setErr("This collection page has reached its review limit."); setLoading(false); return; }
+    if (rpcResult?.error === "profile_not_found") { submittingRef.current = false; setErr("Invalid collection link."); setLoading(false); return; }
+    if (!rpcResult?.ok) { submittingRef.current = false; setErr("Something went wrong. Please try again."); setLoading(false); return; }
     // Fire-and-forget email notification to the profile owner
     fetch("https://dcjfuwapheupwxnroizo.supabase.co/functions/v1/notify-review", {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1" },
       body: JSON.stringify({ userId, reviewerName: f.name, reviewText: f.text, rating }),
     }).catch(() => {});
+    submittingRef.current = false;
     setSubmitted(true); setLoading(false);
     if (onDone) setTimeout(onDone, 2000);
   };
@@ -506,7 +516,7 @@ function Dashboard({ user, onLogout }) {
   const [saveMsg, setSaveMsg] = useState("");
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
-  const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
+  const collectUrl = `https://www.voicemark.co/collect/${profile?.slug || "loading..."}`;
 
   // Re-fetch profile in case slug wasn't loaded at login
   useEffect(() => {
@@ -543,9 +553,13 @@ function Dashboard({ user, onLogout }) {
 
   const updateStatus = async (id, status) => {
     setUpdatingId(id);
-    await supabase.from("reviews").update({ status }).eq("id", id).eq("user_id", user.id);
+    const { error } = await supabase.from("reviews").update({ status }).eq("id", id).eq("user_id", user.id);
+    if (!error) {
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    } else {
+      fetchReviews(); // fallback: full refetch on error
+    }
     setUpdatingId(null);
-    fetchReviews();
   };
 
   const deleteReview = async (id) => {
@@ -703,8 +717,8 @@ function Dashboard({ user, onLogout }) {
                 <h3>Your collection link</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
-                  <span className="link-url">{`https://${collectUrl}`}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, setCopiedLink)}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
+                  <span className="link-url">{collectUrl}</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(collectUrl, setCopiedLink)}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -713,10 +727,10 @@ function Dashboard({ user, onLogout }) {
                 <div style={{ background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--r)",padding:16,fontSize:14,lineHeight:1.8,color:"#3a3630" }}>
                   Hi [Name],<br /><br />
                   It was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:<br />
-                  <span style={{ color:"var(--teal)" }}>{`https://${collectUrl}`}</span><br /><br />
+                  <span style={{ color:"var(--teal)" }}>{collectUrl}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, setCopiedEmail)}>{copiedEmail ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\n${collectUrl}\n\nThank you 🙏`, setCopiedEmail)}>{copiedEmail ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
@@ -832,10 +846,15 @@ function App() {
       setChecking(false);
     });
 
-    // Listen for PASSWORD_RECOVERY event (from reset email link)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Listen for auth events (password recovery + future sign-ins via magic link etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setScreen("reset");
+        setChecking(false);
+      } else if (event === "SIGNED_IN" && session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        setUser({ ...session.user, profile });
+        setScreen("app");
         setChecking(false);
       }
     });
