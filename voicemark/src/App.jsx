@@ -32,6 +32,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .btn-danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
 .btn-danger:hover{background:#fecaca}
 .btn-full{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:20}
 .logo{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.3px;cursor:pointer}
 .logo span{color:var(--teal)}
@@ -161,8 +162,10 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
   .hero{padding:40px 20px}
-  .how-steps,.widget-grid,.stats-row,.faq-section{grid-template-columns:1fr}
+  .how-steps,.widget-grid,.stats-row{grid-template-columns:1fr}
+  .how-section,.widget-preview-section,.pricing-section{padding:48px 20px}
   .faq-section{padding:48px 20px}
+  .pricing-card{min-width:0;width:100%}
   .app{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative}
   .content{padding:20px}
@@ -637,11 +640,11 @@ function Dashboard({ user, onLogout }) {
               <button className="btn btn-primary btn-sm" onClick={() => setViewCollect(true)}>Preview collection page →</button>
             </div>
             <div className="content">
-              <div className="stats-row">
+              {!loading && <div className="stats-row">
                 <div className="stat-card"><div className="stat-val">{totalAll}</div><div className="stat-label">Total reviews</div></div>
                 <div className="stat-card"><div className="stat-val">{approved}</div><div className="stat-label">Published</div></div>
                 <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
-              </div>
+              </div>}
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
                 <div className="empty">
                   <h3>No reviews yet</h3>
