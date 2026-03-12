@@ -299,10 +299,10 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
   const sendReset = async () => {
     if (!f.email) { setErr("Please enter your email address"); return; }
     setLoading(true); setErr("");
-    const { error } = await supabase.auth.resetPasswordForEmail(f.email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(f.email.trim(), {
       redirectTo: "https://www.voicemark.co"
     });
-    if (error) { setErr(error.message); } else { setResetSent(true); }
+    if (error) { setErr("Could not send reset link. Please check your email address and try again."); } else { setResetSent(true); }
     setLoading(false);
   };
 
@@ -312,15 +312,15 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
       if (mode === "signup") {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
         if (f.password.length < 6) { setErr("Password must be at least 6 characters"); setLoading(false); return; }
-        const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
-        if (error) { setErr(error.message); setLoading(false); return; }
+        const { data, error } = await supabase.auth.signUp({ email: f.email.trim(), password: f.password });
+        if (error) { setErr("Could not create account. This email may already be in use."); setLoading(false); return; }
         if (!data.user) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
-        const slug = newSlug(f.company) + "-" + Date.now().toString(36);
-        await supabase.from("profiles").upsert({ id: data.user.id, company: f.company, slug, plan: "trial" });
+        const slug = newSlug(f.company.trim()) + "-" + Date.now().toString(36);
+        await supabase.from("profiles").upsert({ id: data.user.id, company: f.company.trim(), slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
         if (error) { setErr("Wrong email or password"); setLoading(false); return; }
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
