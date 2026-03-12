@@ -806,3 +806,13 @@ export default function App() {
     </>
   );
 }
+
+function Root() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
+
+export default Root;
