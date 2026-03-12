@@ -311,10 +311,11 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
     try {
       if (mode === "signup") {
         if (!f.email || !f.password || !f.company) { setErr("Please fill in all fields"); setLoading(false); return; }
+        if (f.password.length < 6) { setErr("Password must be at least 6 characters"); setLoading(false); return; }
         const { data, error } = await supabase.auth.signUp({ email: f.email, password: f.password });
         if (error) { setErr(error.message); setLoading(false); return; }
         const slug = newSlug(f.company) + "-" + Date.now().toString(36);
-        await supabase.from("profiles").insert({ id: data.user.id, company: f.company, slug, plan: "trial" });
+        await supabase.from("profiles").upsert({ id: data.user.id, company: f.company, slug, plan: "trial" });
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
       } else {
@@ -484,7 +485,7 @@ function Dashboard({ user, onLogout }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState("");
   const [viewCollect, setViewCollect] = useState(false);
   const [profile, setProfile] = useState(user.profile);
   const isPaid = profile?.plan === "paid";
@@ -495,13 +496,14 @@ function Dashboard({ user, onLogout }) {
 
 
   const [saveCompany, setSaveCompany] = useState(profile?.company || "");
+  useEffect(() => { if (profile?.company) setSaveCompany(profile.company); }, [profile?.company]);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
   const saveProfile = async () => {
     if (!saveCompany.trim()) { setSaveMsg("Company name cannot be empty"); return; }
     setSaving(true); setSaveMsg("");
-    const newSlugVal = newSlug(saveCompany.trim());
+    const newSlugVal = newSlug(saveCompany.trim()) + "-" + Date.now().toString(36);
     const { error } = await supabase.from("profiles").update({ company: saveCompany.trim(), slug: newSlugVal }).eq("id", user.id);
     if (error) { setSaveMsg("Something went wrong. Try again."); }
     else { setProfile(p => ({ ...p, company: saveCompany.trim(), slug: newSlugVal })); setSaveMsg("✓ Saved!"); setTimeout(() => setSaveMsg(""), 3000); }
@@ -563,7 +565,7 @@ function Dashboard({ user, onLogout }) {
     fetchReviews();
   };
 
-  const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const copy = (text, key) => { navigator.clipboard.writeText(text).catch(() => {}); setCopiedKey(key); setTimeout(() => setCopiedKey(""), 2000); };
 
   if (viewCollect) return <CollectPage userId={user.id} company={profile?.company} onDone={() => { setViewCollect(false); fetchReviews(); }} />;
 
@@ -656,7 +658,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Paste this one line of code anywhere on your website. The widget updates automatically when you approve new reviews.</p>
                 <div className="embed-box">
                   <code>{`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`}</code>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`)}>{copied ? "✓ Copied!" : "Copy code"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`<script src="https://www.voicemark.co/widget.js" data-id="${user.id}"></script>`, "embed")}>{copiedKey==="embed" ? "✓ Copied!" : "Copy code"}</button>
                 </div>
               </div>
               <div className="settings-card">
@@ -688,7 +690,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
                   <span className="link-url">https://{collectUrl}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`)}>{copied ? "✓ Copied!" : "Copy link"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -700,7 +702,7 @@ function Dashboard({ user, onLogout }) {
                   <span style={{ color:"var(--teal)" }}>https://{collectUrl}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`)}>{copied ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, "email")}>{copiedKey==="email" ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
