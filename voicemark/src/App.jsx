@@ -428,11 +428,6 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
-    const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
-    const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
-    if (ownerProfile?.plan !== "paid" && count >= FREE_QUOTA) {
-      setErr("This collection page has reached its review limit."); setLoading(false); return;
-    }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
@@ -487,8 +482,6 @@ function Dashboard({ user, onLogout }) {
   const [profile, setProfile] = useState(user.profile);
   const [updatingId, setUpdatingId] = useState(null);
   const [saveMsg, setSaveMsg] = useState("");
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(null);
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
@@ -515,10 +508,6 @@ function Dashboard({ user, onLogout }) {
     }, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (!isPaid && total >= FREE_QUOTA && total > 0) setShowPaywall(true);
-  }, [total, isPaid]);
 
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
@@ -584,7 +573,7 @@ function Dashboard({ user, onLogout }) {
               <div className="stats-row">
                 <div className="stat-card"><div className="stat-val">{total}</div><div className="stat-label">Total reviews</div></div>
                 <div className="stat-card"><div className="stat-val">{avgRating}</div><div className="stat-label">Avg rating</div></div>
-                <div className="stat-card"><div className="stat-val">{pending > 0 ? <span style={{color:"var(--teal)"}}>{pending}</span> : 0}</div><div className="stat-label">Awaiting approval</div></div>
+                <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
               </div>
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
                 <div className="empty">
@@ -665,7 +654,7 @@ function Dashboard({ user, onLogout }) {
                 <h3>Your collection link</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
-                  <span className="link-url">https://{collectUrl}</span>
+                  <span className="link-url">{`https://${collectUrl}`}</span>
                   <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`)}>{copied ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
@@ -675,7 +664,7 @@ function Dashboard({ user, onLogout }) {
                 <div style={{ background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--r)",padding:16,fontSize:14,lineHeight:1.8,color:"#3a3630" }}>
                   Hi [Name],<br /><br />
                   It was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:<br />
-                  <span style={{ color:"var(--teal)" }}>https://{collectUrl}</span><br /><br />
+                  <span style={{ color:"var(--teal)" }}>{`https://${collectUrl}`}</span><br /><br />
                   Thank you 🙏
                 </div>
                 <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`)}>{copied ? "✓ Copied!" : "Copy email template"}</button>
@@ -700,6 +689,7 @@ function Dashboard({ user, onLogout }) {
                   {isPaid ? "You are on the Pro plan ($19/mo)." : "Free plan - " + Math.max(0, FREE_QUOTA - total) + " of " + FREE_QUOTA + " free reviews remaining."}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
+                {isPaid && <button className="btn btn-ghost btn-sm" onClick={() => window.open("https://billing.stripe.com/p/login/8x23cv4Wd1Au5Gm5CG4AU00","_blank")}>Manage subscription →</button>}
               </div>
             </div>
           </>
