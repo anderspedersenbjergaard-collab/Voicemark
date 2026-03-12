@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Component } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
@@ -951,7 +951,7 @@ function ErrorFallback() {
   );
 }
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { crashed: false }; }
   static getDerivedStateFromError() { return { crashed: true }; }
   render() { return this.state.crashed ? <ErrorFallback /> : this.props.children; }
