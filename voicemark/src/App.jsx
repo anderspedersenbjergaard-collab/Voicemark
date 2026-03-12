@@ -488,6 +488,7 @@ function Dashboard({ user, onLogout }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallDismissed, setPaywallDismissed] = useState(false);
   const [copiedKey, setCopiedKey] = useState("");
   const [viewCollect, setViewCollect] = useState(false);
   const [profile, setProfile] = useState(user.profile);
@@ -557,13 +558,13 @@ function Dashboard({ user, onLogout }) {
 
   useEffect(() => {
     fetchReviews(true);
-    const interval = setInterval(fetchReviews, 10000);
+    const interval = setInterval(() => { if (!viewCollect) fetchReviews(); }, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [viewCollect]);
 
   useEffect(() => {
-    if (!isPaid && total >= FREE_QUOTA) setShowPaywall(true);
-  }, [total, isPaid]);
+    if (!isPaid && total >= FREE_QUOTA && !paywallDismissed) setShowPaywall(true);
+  }, [total, isPaid, paywallDismissed]);
 
   const [updatingId, setUpdatingId] = useState(null);
   const updateStatus = async (id, status) => {
@@ -574,14 +575,21 @@ function Dashboard({ user, onLogout }) {
     setUpdatingId(null);
   };
 
-  const copy = (text, key) => { navigator.clipboard.writeText(text).catch(() => {}); setCopiedKey(key); setTimeout(() => setCopiedKey(""), 2000); };
+  const copy = (text, key) => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopiedKey(key);
+        setTimeout(() => setCopiedKey(""), 2000);
+      }).catch(() => {});
+    }
+  };
 
   if (viewCollect) return <CollectPage userId={user.id} company={profile?.company} onDone={() => { setViewCollect(false); fetchReviews(); }} />;
 
   return (
     <div className="app">
       <StyleInject />
-      {showPaywall && <Paywall onClose={() => setShowPaywall(false)} user={user} />}
+      {showPaywall && <Paywall onClose={() => { setShowPaywall(false); setPaywallDismissed(true); }} user={user} />}
       <aside className="sidebar">
         <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
