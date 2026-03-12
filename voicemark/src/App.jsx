@@ -480,6 +480,10 @@ function Dashboard({ user, onLogout }) {
   const [viewCollect, setViewCollect] = useState(false);
 
   const [profile, setProfile] = useState(user.profile);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [saveMsg, setSaveMsg] = useState("");
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(null);
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
 
@@ -499,13 +503,12 @@ function Dashboard({ user, onLogout }) {
   };
 
   useEffect(() => {
-    if (!session) return;
     fetchReviews();
     const interval = setInterval(() => {
       if (document.visibilityState !== "hidden") fetchReviews();
     }, 30000);
     return () => clearInterval(interval);
-  }, [session]);
+  }, []);
 
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
