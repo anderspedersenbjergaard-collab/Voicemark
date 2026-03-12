@@ -432,7 +432,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
     // Check if owner is on free plan and has hit quota
     const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
     if (ownerProfile?.plan !== "paid") {
-      const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
+      const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId).neq("status", "rejected");
       if (count >= FREE_QUOTA) {
         setErr("This collection page is currently unavailable. Please contact the owner.");
         setLoading(false);
@@ -549,7 +549,8 @@ function Dashboard({ user, onLogout }) {
     setLoading(false);
   };
 
-  const total = reviews.length;
+  const total = reviews.filter(r => r.status !== "rejected").length;
+  const totalAll = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
   const pending = reviews.filter(r => r.status === "pending").length;
   const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
@@ -613,7 +614,7 @@ function Dashboard({ user, onLogout }) {
             </div>
             <div className="content">
               <div className="stats-row">
-                <div className="stat-card"><div className="stat-val">{total}</div><div className="stat-label">Total reviews</div></div>
+                <div className="stat-card"><div className="stat-val">{totalAll}</div><div className="stat-label">Total reviews</div></div>
                 <div className="stat-card"><div className="stat-val">{approved}</div><div className="stat-label">Published</div></div>
                 <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
               </div>
@@ -896,6 +897,10 @@ export default function App() {
       if (event === "PASSWORD_RECOVERY") {
         setScreen("reset");
         setChecking(false);
+      }
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setScreen("landing");
       }
     });
 
