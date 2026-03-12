@@ -428,6 +428,11 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
+    const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
+    const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
+    if (ownerProfile?.plan !== "paid" && count >= FREE_QUOTA) {
+      setErr("This collection page has reached its review limit."); setLoading(false); return;
+    }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
@@ -511,6 +516,10 @@ function Dashboard({ user, onLogout }) {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!isPaid && total >= FREE_QUOTA && total > 0) setShowPaywall(true);
+  }, [total, isPaid]);
+
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
   const pending = reviews.filter(r => r.status === "pending").length;
@@ -532,8 +541,8 @@ function Dashboard({ user, onLogout }) {
   const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const saveProfile = async () => {
-    const slug = newSlug(companyInput || profile?.company);
-    const { data } = await supabase.from("profiles").update({ company: companyInput, slug }).eq("id", user.id).select().single();
+    if (!companyInput.trim()) { setSaveMsg("Name can't be empty"); setTimeout(() => setSaveMsg(""), 2000); return; }
+    const { data } = await supabase.from("profiles").update({ company: companyInput }).eq("id", user.id).select().single();
     if (data) { setProfile(data); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
   };
 
@@ -575,7 +584,7 @@ function Dashboard({ user, onLogout }) {
               <div className="stats-row">
                 <div className="stat-card"><div className="stat-val">{total}</div><div className="stat-label">Total reviews</div></div>
                 <div className="stat-card"><div className="stat-val">{avgRating}</div><div className="stat-label">Avg rating</div></div>
-                <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
+                <div className="stat-card"><div className="stat-val">{pending > 0 ? <span style={{color:"var(--teal)"}}>{pending}</span> : 0}</div><div className="stat-label">Awaiting approval</div></div>
               </div>
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
                 <div className="empty">
