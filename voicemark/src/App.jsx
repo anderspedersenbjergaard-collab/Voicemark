@@ -242,7 +242,7 @@ function Landing({ onSignup, onLogin }) {
               <div className="t-stars">{stars(t.rating)}</div>
               <div className="t-text">"{t.text}"</div>
               <div className="t-author">
-                <div className="t-avatar" style={{ background:t.color }}>{t.name[0]}</div>
+                <div className="t-avatar" style={{ background:t.color }}>{t.name?.[0] || "?"}</div>
                 <div><div className="t-name">{t.name}</div><div className="t-role">{t.role}</div></div>
               </div>
             </div>
@@ -520,7 +520,7 @@ function Dashboard({ user, onLogout }) {
   const [saving, setSaving] = useState(false);
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
-  const collectUrl = `https://www.voicemark.co/collect/${profile?.slug || "loading..."}`;
+  const collectUrl = profile?.slug ? `https://www.voicemark.co/collect/${profile.slug}` : "";
 
   // Re-fetch profile in case slug wasn't loaded at login
   useEffect(() => {
@@ -632,7 +632,7 @@ function Dashboard({ user, onLogout }) {
         {tab === "reviews" && (
           <>
             <div className="topbar">
-              <h1>Reviews</h1>
+              <h1>Reviews {refreshing && <span style={{ fontSize:13,color:"var(--muted)",fontFamily:"'Epilogue',sans-serif",fontWeight:400 }}>· syncing…</span>}</h1>
               <button className="btn btn-primary btn-sm" onClick={() => setViewCollect(true)}>Preview collection page →</button>
             </div>
             <div className="content">
@@ -733,8 +733,8 @@ function Dashboard({ user, onLogout }) {
                 <h3>Your collection link</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
-                  <span className="link-url">{collectUrl}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(collectUrl, setCopiedLink)} disabled={!profile?.slug}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
+                  <span className="link-url">{collectUrl || <span style={{ color:"var(--muted)" }}>Fetching your link...</span>}</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(collectUrl, setCopiedLink)} disabled={!collectUrl}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -746,7 +746,7 @@ function Dashboard({ user, onLogout }) {
                   <span style={{ color:"var(--teal)" }}>{collectUrl}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\n${collectUrl}\n\nThank you 🙏`, setCopiedEmail)}>{copiedEmail ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} disabled={!collectUrl} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\n${collectUrl}\n\nThank you 🙏`, setCopiedEmail)}>{copiedEmail ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
