@@ -54,9 +54,8 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .widget-preview-section{max-width:800px;margin:0 auto;padding:72px 48px}
 .widget-preview-section h2{font-size:36px;font-weight:300;text-align:center;margin-bottom:8px}
 .widget-preview-section>p{text-align:center;color:var(--muted);font-size:14px;margin-bottom:36px}
-.widget-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.t-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:box-shadow .2s}
-.t-tile:hover{box-shadow:var(--shadow)}
+.widget-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.t-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
 .t-stars{color:#d97706;font-size:14px;margin-bottom:8px}
 .t-text{font-size:14px;line-height:1.65;color:#3a3630;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .t-author{display:flex;align-items:center;gap:10px}
@@ -98,8 +97,8 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .s-item:hover{color:white;background:#1a1a1a}
 .s-item.active{color:white;border-left-color:var(--teal);background:#1a1a1a}
 .s-bottom{padding:16px 20px;border-top:1px solid #222;font-size:12px;color:#4a4540}
-.main{flex:1;min-width:0}
-.topbar{padding:16px 32px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+.main{flex:1;min-width:0;overflow-y:auto;height:100vh}
+.topbar{padding:16px 32px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .topbar h1{font-size:22px;font-weight:300}
 .content{padding:32px}
 .trial-banner{background:var(--teal-dim);border-bottom:1px solid #99f6e4;padding:10px 32px;display:flex;align-items:center;justify-content:space-between;font-size:13px}
@@ -159,6 +158,8 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .faq-q{font-size:15px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
 .faq-q:hover{color:var(--teal)}
 .faq-a{font-size:14px;color:var(--muted);line-height:1.75;margin-top:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
   .hero{padding:40px 20px}
@@ -214,7 +215,7 @@ function Landing({ onSignup, onLogin }) {
   return (
     <div>
       <nav className="nav">
-        <Logo />
+        <Logo onClick={() => window.scrollTo({top:0,behavior:"smooth"})} />
         <div className="nav-actions">
           <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
           <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
@@ -290,7 +291,7 @@ function Landing({ onSignup, onLogin }) {
         <p style={{ color:"rgba(255,255,255,.8)",fontSize:15,marginBottom:28 }}>3 reviews free · No credit card · 2 minutes to set up</p>
         <button className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</button>
       </div>
-      <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
+      <footer className="site-footer"><Logo onClick={() => window.scrollTo({top:0,behavior:"smooth"})} /><span>© 2026 Voicemark · Built for freelancers & consultants</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
     </div>
   );
 }
@@ -302,6 +303,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
 
   const sendReset = async () => {
@@ -348,7 +350,7 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         </> : <>
           <h2>Reset password</h2>
           <p className="auth-sub">Enter your email and we'll send you a reset link</p>
-          <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && sendReset()} /></div>
+          <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && sendReset()} autoComplete="email" /></div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={sendReset} disabled={loading}>{loading ? "Sending..." : "Send reset link →"}</button>
           <div className="auth-switch"><button onClick={() => { setForgotMode(false); setErr(""); }}>Back to log in</button></div>
@@ -364,16 +366,19 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
         {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} maxLength={60} onKeyDown={e => e.key==="Enter" && go()} /></div>}
-        <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
+        <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} autoComplete={mode==="login"?"username":"email"} /></div>
         <div className="field">
           <label style={{ display:"flex", justifyContent:"space-between" }}>
             Password
             {mode === "login" && <button style={{ background:"none",border:"none",color:"var(--teal)",fontSize:12,cursor:"pointer",fontFamily:"inherit" }} onClick={() => setForgotMode(true)}>Forgot password?</button>}
           </label>
-          <input type="password" placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} />
+          <div style={{position:"relative"}}>
+            <input type={showPw?"text":"password"} placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} style={{paddingRight:44}} autoComplete={mode==="login"?"current-password":"new-password"} />
+            <button type="button" onClick={() => setShowPw(p=>!p)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:13,fontFamily:"inherit"}}>{showPw?"Hide":"Show"}</button>
+          </div>
         </div>
         {err && <p className="err">{err}</p>}
-        <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Please wait..." : mode === "login" ? "Log in →" : "Create account →"}</button>
+        <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? <><span className="spinner"></span>Please wait…</> : mode === "login" ? "Log in →" : "Create account →"}</button>
         <div className="auth-switch">
           {mode === "login" ? <>No account? <button onClick={onSwitch}>Sign up free</button></> : <>Have an account? <button onClick={onSwitch}>Log in</button></>}
         </div>
@@ -387,7 +392,6 @@ function Paywall({ onClose, user }) {
   const stripeUrl = new URL("https://buy.stripe.com/fZu5kD1K14MGgl05CG4AU01");
   if (user?.email) stripeUrl.searchParams.set("prefilled_email", user.email);
   if (user?.id) stripeUrl.searchParams.set("client_reference_id", user.id);
-  stripeUrl.searchParams.set("success_url", "https://www.voicemark.co?payment=success");
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -433,6 +437,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
   }, [slug]);
 
   const submit = async () => {
+    if (loading) return;
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
@@ -479,19 +484,20 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Your review</label><textarea placeholder="Share your experience working together..." value={f.text} onChange={set("text")} maxLength={600} /></div>
+          <div className="field"><label style={{display:"flex",justifyContent:"space-between"}}><span>Your review</span><span style={{fontWeight:400,textTransform:"none",letterSpacing:0}}>{f.text.length}/600</span></label><textarea placeholder="Share your experience working together..." value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10 }}>
-            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
-            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
+            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} autoComplete="name" /></div>
+            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} autoComplete="organization-title" /></div>
           </div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={submit} disabled={loading}>{loading ? "Submitting..." : "Submit review →"}</button>
-          <div className="collect-footer">Powered by <span>Voicemark</span></div>
+          <div className="collect-footer">Powered by <a href="https://www.voicemark.co" target="_blank" rel="noopener noreferrer" style={{color:"var(--teal)",textDecoration:"none"}}>Voicemark</a></div>
         </> : (
           <div className="success-card">
             <div className="success-icon">🎉</div>
             <h2 style={{ marginBottom:8 }}>Thank you!</h2>
-            <p style={{ color:"var(--muted)", fontSize:14 }}>Your review has been submitted and will appear on {company || "their"} website shortly.</p>
+            <p style={{ color:"var(--muted)", fontSize:14, marginBottom: onDone ? 0 : 20 }}>Your review has been submitted and will appear on {company || "their"} website shortly.</p>
+            {!onDone && <button className="btn btn-ghost btn-sm" onClick={() => { setSubmitted(false); setRating(0); setF({name:"",role:"",text:""}); setErr(""); }}>Leave another review</button>}
           </div>
         )}
       </div>
@@ -513,7 +519,6 @@ function Dashboard({ user, onLogout }) {
   const collectUrl = profile?.slug ? `www.voicemark.co/collect/${profile.slug}` : null;
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [planConfirmed, setPlanConfirmed] = useState(false);
 
   const [saveCompany, setSaveCompany] = useState(profile?.company || "");
   useEffect(() => { if (profile?.company) setSaveCompany(profile.company); }, [profile?.company]);
@@ -626,7 +631,7 @@ function Dashboard({ user, onLogout }) {
         <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
           {[["reviews","⭐","Reviews"],["embed","🔗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
-            <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => setTab(v)}><span>{ic}</span><span>{lb}</span></div>
+            <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => { setTab(v); document.querySelector(".main")?.scrollTo({top:0}); }}><span>{ic}</span><span>{lb}</span></div>
           ))}
         </nav>
         <div className="s-bottom">
@@ -640,12 +645,12 @@ function Dashboard({ user, onLogout }) {
         {paymentSuccess && (
           <div style={{ background:"#0d9488",color:"white",padding:"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
             <span>🎉 <strong>Welcome to Pro!</strong> Your account has been upgraded. It may take a few seconds to activate.</span>
-            <button onClick={() => setPaymentSuccess(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
+            <button aria-label="Dismiss" onClick={() => setPaymentSuccess(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1,padding:"0 4px" }}>×</button>
           </div>
         )}
         {!isPaid && !loading && (
           <div className="trial-banner">
-            <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} reviews remaining</strong></span>
+            <span>{FREE_QUOTA - total > 0 ? <>Free plan · <strong>{FREE_QUOTA - total} review{FREE_QUOTA - total !== 1 ? "s" : ""} remaining</strong></> : <strong>Free limit reached — upgrade to collect more</strong>}</span>
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
           </div>
         )}
@@ -690,8 +695,8 @@ function Dashboard({ user, onLogout }) {
                           <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✓ Approve"}</button>
                           <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
                         </>}
-                        {r.status === "approved" && <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "Move to pending"}</button>}
-                        {r.status === "rejected" && <button className="btn btn-ghost btn-sm" onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "Restore"}</button>}
+                        {r.status === "approved" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "↩ Move to pending"}</button>}
+                        {r.status === "rejected" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "↩ Restore"}</button>}
                       </div>
                     </div>
                   ))}
@@ -766,7 +771,7 @@ function Dashboard({ user, onLogout }) {
             <div className="content">
               <div className="settings-card">
                 <h3>Account</h3>
-                <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} maxLength={60} /></div>
+                <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} maxLength={60} onKeyDown={e => e.key==="Enter" && saveProfile()} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
                 {saveMsg && <p style={{ fontSize:13, color: saveMsg.startsWith("✓") ? "var(--teal)" : "#dc2626", marginBottom:10 }}>{saveMsg}</p>}
                 <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving || saveCompany.trim() === (profile?.company || "")}>{saving ? "Saving..." : "Save changes"}</button>
@@ -801,6 +806,7 @@ function ResetPassword({ onDone }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   const go = async () => {
     if (!password || password.length < 6) { setErr("Password must be at least 6 characters"); return; }
@@ -822,8 +828,8 @@ function ResetPassword({ onDone }) {
         </> : <>
           <h2>Set new password</h2>
           <p className="auth-sub">Choose a strong password for your account</p>
-          <div className="field"><label>New password</label><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
-          <div className="field"><label>Confirm password</label><input type="password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
+          <div className="field"><label style={{display:"flex",justifyContent:"space-between"}}>New password<button type="button" onClick={() => setShowPw(p=>!p)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--teal)",fontSize:12,fontFamily:"inherit"}}>{showPw?"Hide":"Show"}</button></label><input type={showPw?"text":"password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
+          <div className="field"><label>Confirm password</label><input type={showPw?"text":"password"} placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Saving..." : "Set new password →"}</button>
         </>}
@@ -847,7 +853,7 @@ function LegalPage({ title, children }) {
         <p style={{ color:"var(--muted)", fontSize:13, marginBottom:48 }}>Last updated: March 2026</p>
         <div style={{ fontSize:15, lineHeight:1.8, color:"#3a3630" }}>{children}</div>
       </div>
-      <footer className="site-footer"><Logo /><span>© 2026 Voicemark</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
+      <footer className="site-footer"><Logo onClick={() => window.location.href="/"} /><span>© 2026 Voicemark</span><span style={{display:"flex",gap:16}}><a href="/privacy" style={{color:"var(--muted)",textDecoration:"none"}}>Privacy Policy</a><a href="/terms" style={{color:"var(--muted)",textDecoration:"none"}}>Terms of Service</a></span></footer>
     </div>
   );
 }
