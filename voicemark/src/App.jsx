@@ -436,13 +436,13 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     if (!rating || !f.text || !f.name) { setErr("Please add a rating, your name, and a review"); return; }
     if (!userId) { setErr("Invalid collection link."); return; }
     setLoading(true); setErr("");
-    const { count } = await supabase.from("reviews").select("*", { count: "exact", head: true }).eq("user_id", userId);
-    const { data: ownerProfile } = await supabase.from("profiles").select("plan").eq("id", userId).single();
-    if (ownerProfile?.plan !== "paid" && count >= FREE_QUOTA) {
-      setErr("This collection page has reached its review limit."); setLoading(false); return;
-    }
-    const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
-    if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
+    const { data: rpcResult, error: rpcError } = await supabase.rpc("submit_review", {
+      p_user_id: userId, p_name: f.name, p_role: f.role, p_text: f.text, p_rating: rating,
+    });
+    if (rpcError) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
+    if (rpcResult?.error === "quota_exceeded") { setErr("This collection page has reached its review limit."); setLoading(false); return; }
+    if (rpcResult?.error === "profile_not_found") { setErr("Invalid collection link."); setLoading(false); return; }
+    if (!rpcResult?.ok) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
     // Fire-and-forget email notification to the profile owner
     fetch("https://dcjfuwapheupwxnroizo.supabase.co/functions/v1/notify-review", {
       method: "POST",
