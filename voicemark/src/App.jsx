@@ -699,7 +699,7 @@ function Dashboard({ user, onLogout }) {
                       <div className="t-text">"{r.text}"</div>
                       <div className="t-author">
                         <div className="t-avatar" style={{ background:"var(--teal)" }}>{r.name?.[0] || "?"}</div>
-                        <div><div className="t-name">{r.name}</div><div className="t-role">{r.role}</div></div>
+                        <div><div className="t-name">{r.name}</div>{r.role && <div className="t-role">{r.role}</div>}</div>
                       </div>
                     </div>
                   ))}
@@ -731,7 +731,7 @@ function Dashboard({ user, onLogout }) {
                   <span style={{ color:"var(--teal)" }}>https://{collectUrl}</span><br /><br />
                   Thank you 🙏
                 </div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, "email")}>{copiedKey==="email" ? "✓ Copied!" : "Copy email template"}</button>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop:12 }} onClick={() => copy(`Hi [Name],\n\nIt was a pleasure working with you! If you have 60 seconds, a short review would mean a lot:\nhttps://${collectUrl}\n\nThank you 🙏`, "email")} disabled={!profile?.slug}>{copiedKey==="email" ? "✓ Copied!" : "Copy email template"}</button>
               </div>
             </div>
           </>
@@ -784,7 +784,7 @@ function ResetPassword({ onDone }) {
     if (password !== confirm) { setErr("Passwords do not match"); return; }
     setLoading(true); setErr("");
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) { setErr(error.message); setLoading(false); return; }
+    if (error) { setErr("Could not update password. The reset link may have expired — please request a new one."); setLoading(false); return; }
     setDone(true);
     setTimeout(onDone, 2000);
   };
