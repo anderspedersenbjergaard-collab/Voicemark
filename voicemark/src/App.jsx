@@ -364,13 +364,13 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="auth-sub">{mode === "login" ? "Log in to your dashboard" : "3 reviews free · no credit card"}</p>
         {mode === "signup" && <div className="field"><label>Company / your name</label><input placeholder="Meridian Studio" value={f.company} onChange={set("company")} /></div>}
-        <div className="field"><label>Email</label><input type="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
+        <div className="field"><label>Email</label><input type="email" autoComplete="email" placeholder="you@example.com" value={f.email} onChange={set("email")} onKeyDown={e => e.key==="Enter" && go()} /></div>
         <div className="field">
           <label style={{ display:"flex", justifyContent:"space-between" }}>
             Password
             {mode === "login" && <button style={{ background:"none",border:"none",color:"var(--teal)",fontSize:12,cursor:"pointer",fontFamily:"inherit" }} onClick={() => setForgotMode(true)}>Forgot password?</button>}
           </label>
-          <input type="password" placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} />
+          <input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="••••••••" value={f.password} onChange={set("password")} onKeyDown={e => e.key==="Enter" && go()} />
         </div>
         {err && <p className="err">{err}</p>}
         <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Please wait..." : mode === "login" ? "Log in →" : "Create account →"}</button>
@@ -506,6 +506,7 @@ function Dashboard({ user, onLogout }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [copiedEmbed, setCopiedEmbed] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -516,6 +517,7 @@ function Dashboard({ user, onLogout }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [saveMsg, setSaveMsg] = useState("");
+  const [saving, setSaving] = useState(false);
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
   const collectUrl = `https://www.voicemark.co/collect/${profile?.slug || "loading..."}`;
@@ -535,8 +537,9 @@ function Dashboard({ user, onLogout }) {
 
   const fetchReviews = async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
-    const { data } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setReviews(data || []);
+    const { data, error } = await supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (error) { setFetchError(true); }
+    else { setFetchError(false); setReviews(data || []); }
     if (silent) setRefreshing(false); else setLoading(false);
   };
 
@@ -558,7 +561,7 @@ function Dashboard({ user, onLogout }) {
     if (!error) {
       setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
     } else {
-      fetchReviews(); // fallback: full refetch on error
+      fetchReviews(true); // fallback: refetch on error
     }
     setUpdatingId(null);
   };
@@ -579,9 +582,11 @@ function Dashboard({ user, onLogout }) {
 
   const saveProfile = async () => {
     if (!companyInput.trim()) { setSaveMsg("Company name is required"); setTimeout(() => setSaveMsg(""), 2000); return; }
+    setSaving(true);
     const { error } = await supabase.from("profiles").update({ company: companyInput }).eq("id", user.id);
     if (!error) { setProfile(prev => ({ ...prev, company: companyInput })); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
     else { setSaveMsg("Error saving"); setTimeout(() => setSaveMsg(""), 2000); }
+    setSaving(false);
   };
 
   if (viewCollect) return (
@@ -636,7 +641,13 @@ function Dashboard({ user, onLogout }) {
                 <div className="stat-card"><div className="stat-val">{avgRating}</div><div className="stat-label">Avg rating</div></div>
                 <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
               </div>
-              {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
+              {loading ? <div className="loading">Loading reviews...</div> : fetchError ? (
+                <div className="empty">
+                  <h3>Could not load reviews</h3>
+                  <p>Check your connection and try again.</p>
+                  <button className="btn btn-primary" onClick={() => fetchReviews()}>Retry</button>
+                </div>
+              ) : reviews.length === 0 ? (
                 <div className="empty">
                   <h3>No reviews yet</h3>
                   <p>Send your collection link to a happy client to get started.</p>
@@ -702,7 +713,7 @@ function Dashboard({ user, onLogout }) {
                       <div className="t-stars">{stars(r.rating)}</div>
                       <div className="t-text">"{r.text}"</div>
                       <div className="t-author">
-                        <div className="t-avatar" style={{ background:"var(--teal)" }}>{r.name[0]}</div>
+                        <div className="t-avatar" style={{ background:"var(--teal)" }}>{r.name?.[0] || "?"}</div>
                         <div><div className="t-name">{r.name}</div><div className="t-role">{r.role}</div></div>
                       </div>
                     </div>
@@ -723,7 +734,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
                   <span className="link-url">{collectUrl}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(collectUrl, setCopiedLink)}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(collectUrl, setCopiedLink)} disabled={!profile?.slug}>{copiedLink ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
@@ -749,7 +760,7 @@ function Dashboard({ user, onLogout }) {
                 <h3>Account</h3>
                 <div className="field"><label>Company name</label><input value={companyInput} onChange={e => setCompanyInput(e.target.value)} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
-                <button className="btn btn-primary btn-sm" onClick={saveProfile}>{saveMsg || "Save changes"}</button>
+                <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving}>{saving ? "Saving..." : saveMsg || "Save changes"}</button>
               </div>
               <div className="settings-card">
                 <h3>Subscription</h3>
@@ -776,7 +787,7 @@ function ResetPassword({ onDone, onHome }) {
   const [done, setDone] = useState(false);
 
   const go = async () => {
-    if (!password || password.length < 6) { setErr("Password must be at least 6 characters"); return; }
+    if (!password || password.length < 8) { setErr("Password must be at least 8 characters"); return; }
     if (password !== confirm) { setErr("Passwords do not match"); return; }
     setLoading(true); setErr("");
     const { error } = await supabase.auth.updateUser({ password });
@@ -795,8 +806,8 @@ function ResetPassword({ onDone, onHome }) {
         </> : <>
           <h2>Set new password</h2>
           <p className="auth-sub">Choose a strong password for your account</p>
-          <div className="field"><label>New password</label><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} /></div>
-          <div className="field"><label>Confirm password</label><input type="password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
+          <div className="field"><label>New password</label><input type="password" autoComplete="new-password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} /></div>
+          <div className="field"><label>Confirm password</label><input type="password" autoComplete="new-password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key==="Enter" && go()} /></div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={go} disabled={loading}>{loading ? "Saving..." : "Set new password →"}</button>
         </>}
