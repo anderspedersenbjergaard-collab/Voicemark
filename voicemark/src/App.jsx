@@ -551,8 +551,9 @@ function Dashboard({ user, onLogout }) {
 
   const saveProfile = async () => {
     if (!companyInput.trim()) { setSaveMsg("Company name is required"); setTimeout(() => setSaveMsg(""), 2000); return; }
-    const { data } = await supabase.from("profiles").update({ company: companyInput }).eq("id", user.id).select().single();
-    if (data) { setProfile(data); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
+    const { error } = await supabase.from("profiles").update({ company: companyInput }).eq("id", user.id);
+    if (!error) { setProfile(prev => ({ ...prev, company: companyInput })); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
+    else { setSaveMsg("Error saving"); setTimeout(() => setSaveMsg(""), 2000); }
   };
 
   if (viewCollect) return (
