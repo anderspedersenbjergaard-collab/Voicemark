@@ -437,6 +437,12 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name, role: f.role, text: f.text, rating, status: "pending" });
     if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
+    // Fire-and-forget email notification to the profile owner
+    fetch("https://dcjfuwapheupwxnroizo.supabase.co/functions/v1/notify-review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1" },
+      body: JSON.stringify({ userId, reviewerName: f.name, reviewText: f.text, rating }),
+    }).catch(() => {});
     setSubmitted(true); setLoading(false);
     if (onDone) setTimeout(onDone, 2000);
   };
