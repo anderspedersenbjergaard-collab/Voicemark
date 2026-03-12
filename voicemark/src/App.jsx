@@ -58,7 +58,7 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .t-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:box-shadow .2s}
 .t-tile:hover{box-shadow:var(--shadow)}
 .t-stars{color:#d97706;font-size:14px;margin-bottom:8px}
-.t-text{font-size:14px;line-height:1.65;color:#3a3630;margin-bottom:14px}
+.t-text{font-size:14px;line-height:1.65;color:#3a3630;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .t-author{display:flex;align-items:center;gap:10px}
 .t-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
 .t-name{font-size:13px;font-weight:500}
@@ -664,13 +664,13 @@ function Dashboard({ user, onLogout }) {
                         </div>
                         <div style={{ display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
                           <span className={`status-pill pill-${r.status}`}>{r.status}</span>
-                          <span className="rc-date">{r.created_at?.split("T")[0]}</span>
+                          <span className="rc-date">{r.created_at ? new Date(r.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : ""}</span>
                         </div>
                       </div>
                       {r.status === "pending" && (
                         <div className="rc-actions">
-                          <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={updatingId===r.id}>{updatingId===r.id ? "..." : "✓ Approve"}</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={updatingId===r.id}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
+                          <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✓ Approve"}</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>{updatingId===r.id ? "..." : "✕ Reject"}</button>
                         </div>
                       )}
                     </div>
