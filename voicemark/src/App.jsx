@@ -752,9 +752,6 @@ class ErrorBoundary extends Component {
 function App() {
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
-  if (collectMatch) {
-    return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
-  }
 
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
@@ -789,6 +786,10 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (collectMatch) {
+    return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
+  }
 
   if (checking) return <><StyleInject /><div className="loading" style={{ minHeight:"100vh" }}>Loading...</div></>;
 
