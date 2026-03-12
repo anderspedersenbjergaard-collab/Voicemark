@@ -6,7 +6,7 @@ const SUPABASE_KEY = "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FREE_QUOTA = 3;
-const newSlug = (company) => company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+const newSlug = (company) => { const s = company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""); return s || "user"; };
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 
@@ -451,7 +451,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
         {!submitted ? <>
           <div className="cc-header">
             <div className="cc-logo">{company?.[0] || "V"}</div>
-            <div><h2>How was your experience?</h2><p>{company} · Takes 60 seconds</p></div>
+            <div><h2>How was your experience?</h2><p>{company ? `${company} · ` : ""}Takes 60 seconds</p></div>
           </div>
           <div className="star-row">
             {[1,2,3,4,5].map(n => (
@@ -459,7 +459,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} /></div>
+          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
             <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} /></div>
             <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} /></div>
@@ -492,8 +492,6 @@ function Dashboard({ user, onLogout }) {
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-
-
 
   const [saveCompany, setSaveCompany] = useState(profile?.company || "");
   useEffect(() => { if (profile?.company) setSaveCompany(profile.company); }, [profile?.company]);
@@ -535,6 +533,7 @@ function Dashboard({ user, onLogout }) {
         }
         if (attempts >= 10) clearInterval(poll);
       }, 3000);
+      return () => clearInterval(poll);
     }
   }, []);
 
@@ -610,7 +609,7 @@ function Dashboard({ user, onLogout }) {
             <div className="content">
               <div className="stats-row">
                 <div className="stat-card"><div className="stat-val">{total}</div><div className="stat-label">Total reviews</div></div>
-                <div className="stat-card"><div className="stat-val">{avgRating}</div><div className="stat-label">Avg rating</div></div>
+                <div className="stat-card"><div className="stat-val">{approved}</div><div className="stat-label">Published</div></div>
                 <div className="stat-card"><div className="stat-val">{pending}</div><div className="stat-label">Awaiting approval</div></div>
               </div>
               {loading ? <div className="loading">Loading reviews...</div> : reviews.length === 0 ? (
@@ -714,7 +713,7 @@ function Dashboard({ user, onLogout }) {
             <div className="content">
               <div className="settings-card">
                 <h3>Account</h3>
-                <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} /></div>
+                <div className="field"><label>Company name</label><input value={saveCompany} onChange={e => setSaveCompany(e.target.value)} maxLength={60} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
                 {saveMsg && <p style={{ fontSize:13, color: saveMsg.startsWith("✓") ? "var(--teal)" : "#dc2626", marginBottom:10 }}>{saveMsg}</p>}
                 <button className="btn btn-primary btn-sm" onClick={saveProfile} disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
