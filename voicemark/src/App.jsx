@@ -749,7 +749,7 @@ class ErrorBoundary extends Component {
 }
 
 
-export default function App() {
+function App() {
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
   if (collectMatch) {
