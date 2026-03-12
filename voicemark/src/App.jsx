@@ -401,7 +401,7 @@ function Paywall({ onClose }) {
 }
 
 // ── COLLECT PAGE ───────────────────────────────────────────────────────────
-function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone }) {
+function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, previewMode }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [f, setF] = useState({ name:"", role:"", text:"" });
@@ -450,13 +450,13 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} /></div>
+          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} /></div>
-            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} /></div>
+            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
+            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
           </div>
           {err && <p className="err">{err}</p>}
-          <button className="btn btn-primary btn-full" onClick={submit} disabled={loading}>{loading ? "Submitting..." : "Submit review →"}</button>
+          <button className="btn btn-primary btn-full" onClick={submit} disabled={loading || previewMode} style={previewMode ? {opacity:0.5,cursor:"not-allowed"} : {}}>{previewMode ? "Disabled in preview" : loading ? "Submitting..." : "Submit review →"}</button>
           <div className="collect-footer">Powered by <span>Voicemark</span></div>
         </> : (
           <div className="success-card">
@@ -535,7 +535,17 @@ function Dashboard({ user, onLogout }) {
     if (data) { setProfile(data); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
   };
 
-  if (viewCollect) return <CollectPage userId={user.id} company={profile?.company} onDone={() => { setViewCollect(false); fetchReviews(); }} />;
+  if (viewCollect) return (
+    <div style={{ position:"relative" }}>
+      <div style={{ position:"fixed",top:0,left:0,right:0,zIndex:50,background:"#fef3c7",borderBottom:"2px solid #f59e0b",padding:"10px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
+        <span>👁 Preview mode — submissions are disabled</span>
+        <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(false)}>← Back to dashboard</button>
+      </div>
+      <div style={{ paddingTop:48 }}>
+        <CollectPage userId={user.id} company={profile?.company} previewMode={true} onDone={() => setViewCollect(false)} />
+      </div>
+    </div>
+  );
 
   return (
     <div className="app">
