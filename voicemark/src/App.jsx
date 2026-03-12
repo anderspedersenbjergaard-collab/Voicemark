@@ -385,7 +385,7 @@ function Paywall({ onClose }) {
     <div className="modal-overlay">
       <div className="modal">
         <h2>Free reviews used up</h2>
-        <p>You've collected 10 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
+        <p>You've collected your 3 free reviews. Upgrade to keep collecting unlimited testimonials.</p>
         <div className="m-price">$19 <span>/ month</span></div>
         <ul className="m-features">
           {["Unlimited testimonials","Embeddable widget","Custom branding","Email notifications"].map(f => <li key={f}>{f}</li>)}
@@ -484,6 +484,7 @@ function Dashboard({ user, onLogout }) {
   const [saveMsg, setSaveMsg] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
+  const [companyInput, setCompanyInput] = useState(profile?.company || "");
   const isPaid = profile?.plan === "paid";
   const collectUrl = `www.voicemark.co/collect/${profile?.slug || "loading..."}`;
 
@@ -530,6 +531,12 @@ function Dashboard({ user, onLogout }) {
 
   const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
+  const saveProfile = async () => {
+    const slug = newSlug(companyInput || profile?.company);
+    const { data } = await supabase.from("profiles").update({ company: companyInput, slug }).eq("id", user.id).select().single();
+    if (data) { setProfile(data); setSaveMsg("Saved!"); setTimeout(() => setSaveMsg(""), 2000); }
+  };
+
   if (viewCollect) return <CollectPage userId={user.id} company={profile?.company} onDone={() => { setViewCollect(false); fetchReviews(); }} />;
 
   return (
@@ -537,7 +544,7 @@ function Dashboard({ user, onLogout }) {
       <StyleInject />
       {showPaywall && <Paywall onClose={() => setShowPaywall(false)} />}
       <aside className="sidebar">
-        <div className="s-logo" onClick={onLogout}>Voice<span>mark</span></div>
+        <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
           {[["reviews","⭐","Reviews"],["embed","🔗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
             <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => setTab(v)}><span>{ic}</span><span>{lb}</span></div>
@@ -592,8 +599,7 @@ function Dashboard({ user, onLogout }) {
                           <span className="rc-date">{r.created_at?.split("T")[0]}</span>
                         </div>
                       </div>
-                      {r.status === "pending" && (
-                        <div className="rc-actions">
+                      <div className="rc-actions">
                           {r.status === "pending" && <>
                             <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={!!updatingId}>✓ Approve</button>
                             <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>✕ Reject</button>
@@ -602,7 +608,6 @@ function Dashboard({ user, onLogout }) {
                           {r.status === "rejected" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>↩ Restore</button>}
                           <button className="btn btn-ghost btn-sm" style={{color:"#dc2626",fontSize:12}} onClick={() => deleteReview(r.id)} disabled={!!updatingId}>🗑 Delete</button>
                         </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -676,9 +681,9 @@ function Dashboard({ user, onLogout }) {
             <div className="content">
               <div className="settings-card">
                 <h3>Account</h3>
-                <div className="field"><label>Company name</label><input defaultValue={profile?.company} /></div>
+                <div className="field"><label>Company name</label><input value={companyInput} onChange={e => setCompanyInput(e.target.value)} /></div>
                 <div className="field"><label>Email</label><input defaultValue={user.email} disabled /></div>
-                <button className="btn btn-primary btn-sm">Save changes</button>
+                <button className="btn btn-primary btn-sm" onClick={saveProfile}>{saveMsg || "Save changes"}</button>
               </div>
               <div className="settings-card">
                 <h3>Subscription</h3>
