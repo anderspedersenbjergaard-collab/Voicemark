@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
@@ -375,6 +375,12 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
 
 // ── PAYWALL ────────────────────────────────────────────────────────────────
 function Paywall({ onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onKey); };
+  }, []);
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -493,11 +499,13 @@ function Dashboard({ user, onLogout }) {
   };
 
   useEffect(() => {
+    if (!session) return;
     fetchReviews();
-    // Poll for new reviews every 10 seconds
-    const interval = setInterval(fetchReviews, 10000);
+    const interval = setInterval(() => {
+      if (document.visibilityState !== "hidden") fetchReviews();
+    }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [session]);
 
   const total = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
@@ -507,6 +515,14 @@ function Dashboard({ user, onLogout }) {
   const updateStatus = async (id, status) => {
     await supabase.from("reviews").update({ status }).eq("id", id);
     fetchReviews();
+  };
+
+  const deleteReview = async (id) => {
+    if (!window.confirm("Delete this review permanently?")) return;
+    setUpdatingId(id);
+    await supabase.from("reviews").delete().eq("id", id);
+    setReviews(prev => prev.filter(r => r.id !== id));
+    setUpdatingId(null);
   };
 
   const copy = (text) => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
@@ -575,8 +591,13 @@ function Dashboard({ user, onLogout }) {
                       </div>
                       {r.status === "pending" && (
                         <div className="rc-actions">
-                          <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")}>✓ Approve</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")}>✕ Reject</button>
+                          {r.status === "pending" && <>
+                            <button className="btn btn-primary btn-sm" onClick={() => updateStatus(r.id,"approved")} disabled={!!updatingId}>✓ Approve</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id,"rejected")} disabled={!!updatingId}>✕ Reject</button>
+                          </>}
+                          {r.status === "approved" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>↩ Move to pending</button>}
+                          {r.status === "rejected" && <button className="btn btn-ghost btn-sm" style={{color:"var(--muted)",fontSize:12}} onClick={() => updateStatus(r.id,"pending")} disabled={!!updatingId}>↩ Restore</button>}
+                          <button className="btn btn-ghost btn-sm" style={{color:"#dc2626",fontSize:12}} onClick={() => deleteReview(r.id)} disabled={!!updatingId}>🗑 Delete</button>
                         </div>
                       )}
                     </div>
@@ -710,6 +731,24 @@ function ResetPassword({ onDone }) {
 }
 
 // ── ROOT ───────────────────────────────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error("ErrorBoundary caught:", error, info); }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:40,textAlign:"center"}}>
+        <div style={{fontSize:40}}>😕</div>
+        <h2 style={{marginBottom:8}}>Something went wrong</h2>
+        <p style={{color:"#8a857d",fontSize:14,maxWidth:360}}>An unexpected error occurred. Please refresh the page.</p>
+        <button className="btn btn-primary" style={{marginTop:24}} onClick={() => window.location.reload()}>Refresh page</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+
 export default function App() {
   const path = window.location.pathname;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
