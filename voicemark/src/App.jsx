@@ -440,7 +440,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
       }
     }
     const { error } = await supabase.from("reviews").insert({ user_id: userId, name: f.name.trim(), role: f.role.trim(), text: f.text.trim(), rating, status: "pending" });
-    if (error) { setErr("Something went wrong. Please try again. (" + error.message + ")"); setLoading(false); return; }
+    if (error) { setErr("Something went wrong. Please try again."); setLoading(false); return; }
     setSubmitted(true); setLoading(false);
     if (onDone) setTimeout(onDone, 2000);
     } catch(e) { setErr("Something went wrong. Please try again."); setLoading(false); }
@@ -464,8 +464,8 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone })
           </div>
           <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} /></div>
-            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} /></div>
+            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
+            <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
           </div>
           {err && <p className="err">{err}</p>}
           <button className="btn btn-primary btn-full" onClick={submit} disabled={loading}>{loading ? "Submitting..." : "Submit review →"}</button>
@@ -553,7 +553,7 @@ function Dashboard({ user, onLogout }) {
   const totalAll = reviews.length;
   const approved = reviews.filter(r => r.status === "approved").length;
   const pending = reviews.filter(r => r.status === "pending").length;
-  const avgRating = total ? (reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
+  const avgRating = total ? (reviews.filter(r => r.status !== "rejected").reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
   useEffect(() => {
     fetchReviews(true);
@@ -695,7 +695,7 @@ function Dashboard({ user, onLogout }) {
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>Share this link with any client. No account needed on their end.</p>
                 <div className="link-box">
                   <span className="link-url">https://{collectUrl}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => copy(`https://${collectUrl}`, "link")} disabled={!profile?.slug}>{copiedKey==="link" ? "✓ Copied!" : "Copy link"}</button>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setViewCollect(true)}>Preview what clients see →</button>
               </div>
