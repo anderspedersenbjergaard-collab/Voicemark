@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, Component } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://dcjfuwapheupwxnroizo.supabase.co";
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FREE_QUOTA = 3;
-const newSlug = (company) => company.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+const newSlug = (company) => (company || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/^-+|-+$/g, "");
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 const G = `
@@ -169,7 +169,9 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 
 function StyleInject() {
   useEffect(() => {
+    if (document.getElementById("vm-app-styles")) return;
     const el = document.createElement("style");
+    el.id = "vm-app-styles";
     el.textContent = G;
     document.head.appendChild(el);
     return () => el.remove();
@@ -321,10 +323,17 @@ function Auth({ mode, onAuth, onSwitch, onHome }) {
           }
           setLoading(false); return;
         }
-        let slug = newSlug(f.company) || data.user.id.slice(0, 8);
+        let slug = newSlug(f.company);
+        if (!slug || slug.length < 2) slug = data.user.id.slice(0, 8);
         const { data: existing } = await supabase.from("profiles").select("id").eq("slug", slug).neq("id", data.user.id).single();
         if (existing) slug = slug + "-" + data.user.id.slice(0, 6);
         await supabase.from("profiles").upsert({ id: data.user.id, company: f.company, slug, plan: "trial" }, { onConflict: "id" });
+        // If email confirmation is required, session will be null — show message instead of dashboard
+        if (!data.session) {
+          setErr(""); setLoading(false);
+          alert("Account created! Please check your inbox and confirm your email before logging in.");
+          return;
+        }
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onAuth({ ...data.user, profile });
       } else {
@@ -454,9 +463,9 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     if (rpcResult?.error === "profile_not_found") { submittingRef.current = false; setErr("Invalid collection link."); setLoading(false); return; }
     if (!rpcResult?.ok) { submittingRef.current = false; setErr("Something went wrong. Please try again."); setLoading(false); return; }
     // Fire-and-forget email notification to the profile owner
-    fetch("https://dcjfuwapheupwxnroizo.supabase.co/functions/v1/notify-review", {
+    fetch(`${SUPABASE_URL}/functions/v1/notify-review`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c" },
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
       body: JSON.stringify({ userId, reviewerName: f.name, reviewText: f.text, rating }),
     }).catch(() => {});
     submittingRef.current = false;
@@ -553,6 +562,7 @@ function Dashboard({ user, onLogout }) {
 
   const total = reviews.length;
   const pending = reviews.filter(r => r.status === "pending").length;
+  const quotaCount = reviews.filter(r => r.status !== "rejected").length;
   const avgRating = total ? +(reviews.reduce((s,r) => s + r.rating, 0) / total).toFixed(1) : "—";
 
   const updateStatus = async (id, status) => {
@@ -620,10 +630,10 @@ function Dashboard({ user, onLogout }) {
 
       <main className="main">
         {!isPaid && (
-          <div className="trial-banner" style={total >= FREE_QUOTA ? {background:"#fef3c7",borderBottomColor:"#f59e0b"} : {}}>
-            {total >= FREE_QUOTA
+          <div className="trial-banner" style={quotaCount >= FREE_QUOTA ? {background:"#fef3c7",borderBottomColor:"#f59e0b"} : {}}>
+            {quotaCount >= FREE_QUOTA
               ? <span>⚠️ <strong>Review limit reached</strong> · Upgrade to keep collecting</span>
-              : <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - total)} of {FREE_QUOTA} reviews remaining</strong></span>
+              : <span>Free plan · <strong>{Math.max(0, FREE_QUOTA - quotaCount)} of {FREE_QUOTA} reviews remaining</strong></span>
             }
             <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade $19/mo →</button>
           </div>
@@ -765,7 +775,7 @@ function Dashboard({ user, onLogout }) {
               <div className="settings-card">
                 <h3>Subscription</h3>
                 <p style={{ fontSize:14,color:"var(--muted)",marginBottom:16 }}>
-                  {isPaid ? "You are on the Pro plan ($19/mo)." : "Free plan - " + Math.max(0, FREE_QUOTA - total) + " of " + FREE_QUOTA + " free reviews remaining."}
+                  {isPaid ? "You are on the Pro plan ($19/mo)." : "Free plan - " + Math.max(0, FREE_QUOTA - quotaCount) + " of " + FREE_QUOTA + " free reviews remaining."}
                 </p>
                 {!isPaid && <button className="btn btn-primary btn-sm" onClick={() => setShowPaywall(true)}>Upgrade to Pro → $19/mo</button>}
                 {isPaid && <button className="btn btn-ghost btn-sm" onClick={() => window.open("https://billing.stripe.com/p/login/8x23cv4Wd1Au5Gm5CG4AU00","_blank","noopener,noreferrer")}>Manage subscription →</button>}
