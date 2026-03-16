@@ -225,6 +225,13 @@ function FaqItem({ q, a }) {
 
 // ── LANDING ────────────────────────────────────────────────────────────────
 function Landing({ onSignup, onLogin }) {
+  useEffect(() => {
+    setMeta({
+      title: "Voicemark – Collect Client Testimonials Automatically",
+      description: "Send one link. Collect beautiful testimonials from clients. Embed them on your website automatically. Free to start — no credit card needed.",
+      url: "https://www.voicemark.co"
+    });
+  }, []);
   const tiles = [
     { name:"Sarah K.", role:"Freelance Designer", rating:5, text:"Landed 3 new clients after adding these reviews to my portfolio.", color:"#0d9488" },
     { name:"Marco T.", role:"Business Consultant", rating:5, text:"My proposal conversion rate doubled. Clients trust me before we meet.", color:"#7c3aed" },
@@ -904,12 +911,36 @@ class ErrorBoundary extends Component {
 }
 
 
+// ── SEO HELPER ─────────────────────────────────────────────────────────────
+function setMeta({ title, description, url }) {
+  document.title = title;
+  const set = (sel, attr, val) => {
+    let el = document.querySelector(sel);
+    if (!el) { el = document.createElement("meta"); document.head.appendChild(el); }
+    el.setAttribute(attr, val);
+  };
+  set('meta[name="description"]', "name", "description");
+  set('meta[name="description"]', "content", description);
+  set('meta[property="og:title"]', "property", "og:title");
+  set('meta[property="og:title"]', "content", title);
+  set('meta[property="og:description"]', "property", "og:description");
+  set('meta[property="og:description"]', "content", description);
+  set('meta[property="og:url"]', "property", "og:url");
+  set('meta[property="og:url"]', "content", url || window.location.href);
+  set('meta[property="og:type"]', "property", "og:type");
+  set('meta[property="og:type"]', "content", "website");
+  set('meta[property="og:image"]', "property", "og:image");
+  set('meta[property="og:image"]', "content", "https://www.voicemark.co/og-image.png");
+}
+
+
 // ── BLOG DATA ──────────────────────────────────────────────────────────────
 const POSTS = [
   {
     slug: "how-to-ask-clients-for-testimonials",
     tag: "Guide",
     title: "How to Ask Clients for Testimonials (Without Feeling Awkward)",
+    description: "Learn exactly how to ask clients for testimonials — what to say, when to ask, and how to make it effortless. Practical scripts and templates included.",
     excerpt: "Most freelancers never ask for testimonials. Here\'s exactly what to say, when to say it, and how to make it effortless for your client.",
     date: "March 16, 2026",
     readTime: "8 min read",
@@ -971,6 +1002,7 @@ const POSTS = [
     slug: "how-to-add-testimonials-to-your-website",
     tag: "Tutorial",
     title: "How to Add Testimonials to Your Website (The Right Way)",
+    description: "The right way to add testimonials to your website — where to place them, what they should say, and how to embed them so they update automatically.",
     excerpt: "Adding testimonials to your website can double your conversion rate — but only if you do it right. Here's where to place them and how to display them effectively.",
     date: "March 16, 2026",
     readTime: "6 min read",
@@ -1019,6 +1051,7 @@ const POSTS = [
     slug: "social-proof-for-freelancers",
     tag: "Strategy",
     title: "Social Proof for Freelancers: Why It Matters and How to Get It",
+    description: "Social proof is the most powerful tool a freelancer has for winning new clients. Here's what it is, why it works, and how to build it from scratch.",
     excerpt: "Social proof is the single most powerful tool a freelancer has for winning new clients. Here's what it is, why it works, and how to build it from scratch.",
     date: "March 16, 2026",
     readTime: "7 min read",
@@ -1073,6 +1106,7 @@ const POSTS = [
     slug: "freelance-portfolio-tips",
     tag: "Guide",
     title: "Freelance Portfolio Tips: The One Thing Most Portfolios Are Missing",
+    description: "Most freelance portfolios show great work but miss the one thing that actually convinces clients to hire you. Here's what it is and how to add it.",
     excerpt: "Your portfolio shows your work. But the one thing that actually convinces clients to hire you isn't in most freelance portfolios — and it's easier to fix than you think.",
     date: "March 16, 2026",
     readTime: "5 min read",
@@ -1121,7 +1155,11 @@ const POSTS = [
 // ── BLOG INDEX ─────────────────────────────────────────────────────────────
 function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
   useEffect(() => {
-    document.title = "Blog · Voicemark";
+    setMeta({
+      title: "Blog · Voicemark",
+      description: "Practical guides on collecting testimonials, building social proof, and growing your freelance business.",
+      url: "https://www.voicemark.co/blog"
+    });
     return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
   }, []);
   return (
@@ -1161,7 +1199,13 @@ function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
 function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
   const post = POSTS.find(p => p.slug === slug);
   useEffect(() => {
-    if (post) document.title = post.title + " · Voicemark";
+    if (post) {
+      setMeta({
+        title: post.title + " · Voicemark",
+        description: post.description,
+        url: "https://www.voicemark.co/blog/" + post.slug
+      });
+    }
     window.scrollTo(0, 0);
     return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
   }, [slug]);
