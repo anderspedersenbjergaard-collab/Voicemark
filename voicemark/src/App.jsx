@@ -1199,7 +1199,12 @@ function App() {
   const path = currentPath;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
 
-  const [screen, setScreen] = useState("landing");
+  const [screen, setScreen] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("signup") === "1") return "signup";
+    if (p.get("login") === "1") return "login";
+    return "landing";
+  });
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
 
@@ -1251,10 +1256,10 @@ function App() {
     return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
   }
   if (isBlogIndex) {
-    return <><StyleInject /><BlogIndex onPost={slug => window.history.pushState({}, "", "/blog/" + slug) || window.dispatchEvent(new PopStateEvent("popstate"))} onSignup={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); setTimeout(() => document.querySelector && setScreen && setScreen("signup"), 0); }} onLogin={() => { window.history.pushState({}, "", "/"); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
+    return <><StyleInject /><BlogIndex onPost={slug => { window.history.pushState({}, "", "/blog/" + slug); window.dispatchEvent(new PopStateEvent("popstate")); }} onSignup={() => { window.history.pushState({}, "", "/?signup=1"); window.dispatchEvent(new PopStateEvent("popstate")); }} onLogin={() => { window.history.pushState({}, "", "/?login=1"); window.dispatchEvent(new PopStateEvent("popstate")); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
   }
   if (blogPostMatch) {
-    return <><StyleInject /><BlogPost slug={blogPostMatch[1]} onBack={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }} onSignup={() => { window.history.pushState({}, "", "/"); }} onLogin={() => { window.history.pushState({}, "", "/"); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
+    return <><StyleInject /><BlogPost slug={blogPostMatch[1]} onBack={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }} onSignup={() => { window.history.pushState({}, "", "/?signup=1"); window.dispatchEvent(new PopStateEvent("popstate")); }} onLogin={() => { window.history.pushState({}, "", "/?login=1"); window.dispatchEvent(new PopStateEvent("popstate")); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
   }
 
   if (checking) return <><StyleInject /><div className="loading" style={{ minHeight:"100vh" }}>Loading...</div></>;
