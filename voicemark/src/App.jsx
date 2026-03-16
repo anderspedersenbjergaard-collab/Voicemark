@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, Component } from "react";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FREE_QUOTA = 3;
@@ -456,7 +456,7 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
     // Fire-and-forget email notification to the profile owner
     fetch("https://dcjfuwapheupwxnroizo.supabase.co/functions/v1/notify-review", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1" },
+      headers: { "Content-Type": "application/json", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c" },
       body: JSON.stringify({ userId, reviewerName: f.name, reviewText: f.text, rating }),
     }).catch(() => {});
     submittingRef.current = false;
