@@ -1262,7 +1262,22 @@ function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const onPop = () => setCurrentPath(window.location.pathname);
+    const onPop = () => {
+      const newPath = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+      setCurrentPath(newPath);
+      if (newPath === "/") {
+        if (params.get("signup") === "1") {
+          window.history.replaceState({}, "", "/");
+          setScreen("signup");
+        } else if (params.get("login") === "1") {
+          window.history.replaceState({}, "", "/");
+          setScreen("login");
+        } else {
+          setScreen("landing");
+        }
+      }
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
