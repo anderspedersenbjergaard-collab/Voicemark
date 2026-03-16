@@ -528,19 +528,42 @@ function Dashboard({ user, onLogout }) {
   const [saveMsg, setSaveMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [companyInput, setCompanyInput] = useState(profile?.company || "");
+  const [upgradedBanner, setUpgradedBanner] = useState(false);
   const isPaid = profile?.plan === "paid";
   const collectUrl = profile?.slug ? `https://www.voicemark.co/collect/${profile.slug}` : "";
 
-  // Re-fetch profile in case slug wasn't loaded at login
+  // Re-fetch profile always (get latest plan), and handle ?upgraded=1 from Stripe redirect
   useEffect(() => {
-    if (!profile?.slug) {
-      supabase.from("profiles").select("*").eq("id", user.id).single()
-        .then(({ data }) => {
-          if (data) {
-            setProfile(data);
-            setCompanyInput(data.company || "");
+    const params = new URLSearchParams(window.location.search);
+    const justUpgraded = params.get("upgraded") === "1";
+    if (justUpgraded) window.history.replaceState({}, "", window.location.pathname);
+
+    supabase.from("profiles").select("*").eq("id", user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setProfile(data);
+          setCompanyInput(data.company || "");
+          if (justUpgraded && data.plan === "paid") {
+            setUpgradedBanner(true);
+            setTimeout(() => setUpgradedBanner(false), 6000);
           }
-        });
+        }
+      });
+
+    // If just upgraded but webhook hasn't arrived yet, poll every 2s for up to 20s
+    if (justUpgraded) {
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
+        if (data?.plan === "paid") {
+          setProfile(prev => ({ ...prev, plan: "paid" }));
+          setUpgradedBanner(true);
+          setTimeout(() => setUpgradedBanner(false), 6000);
+          clearInterval(poll);
+        }
+        if (attempts >= 10) clearInterval(poll);
+      }, 2000);
     }
   }, [user.id]);
 
@@ -629,6 +652,12 @@ function Dashboard({ user, onLogout }) {
       </aside>
 
       <main className="main">
+        {upgradedBanner && (
+          <div style={{ background:"#0d9488",color:"white",padding:"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
+            <span>🎉 <strong>Welcome to Pro!</strong> Your account has been upgraded. Collect unlimited reviews.</span>
+            <button onClick={() => setUpgradedBanner(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
+          </div>
+        )}
         {!isPaid && (
           <div className="trial-banner" style={quotaCount >= FREE_QUOTA ? {background:"#fef3c7",borderBottomColor:"#f59e0b"} : {}}>
             {quotaCount >= FREE_QUOTA
