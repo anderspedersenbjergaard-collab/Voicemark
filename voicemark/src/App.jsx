@@ -156,6 +156,34 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .faq-q{font-size:15px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
 .faq-q:hover{color:var(--teal)}
 .faq-a{font-size:14px;color:var(--muted);line-height:1.75;margin-top:12px}
+
+.blog-hero{max-width:860px;margin:0 auto;padding:52px 48px 36px;text-align:center}
+.blog-hero h1{font-size:clamp(32px,5vw,52px);letter-spacing:-1px;margin-bottom:16px;font-weight:300}
+.blog-hero p{font-size:17px;color:var(--muted);max-width:480px;margin:0 auto}
+.blog-grid{max-width:860px;margin:0 auto;padding:0 48px 80px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px}
+.blog-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;cursor:pointer;transition:box-shadow .2s,transform .15s}
+.blog-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.blog-card-tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+.blog-card h2{font-size:20px;font-weight:300;margin-bottom:10px;line-height:1.3}
+.blog-card p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:16px}
+.blog-card-meta{font-size:12px;color:var(--muted);display:flex;gap:12px}
+.blog-post-wrap{max-width:680px;margin:0 auto;padding:48px 48px 80px}
+.blog-post-back{font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:32px;display:inline-flex;align-items:center;gap:6px}
+.blog-post-back:hover{color:var(--teal)}
+.blog-post-tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:16px}
+.blog-post-wrap h1{font-size:clamp(28px,4vw,42px);font-weight:300;letter-spacing:-.5px;margin-bottom:16px;line-height:1.2}
+.blog-post-meta{font-size:13px;color:var(--muted);margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.blog-post-body{font-size:16px;line-height:1.85;color:#2a2620}
+.blog-post-body h2{font-family:'Fraunces',serif;font-size:24px;font-weight:300;margin:40px 0 16px;color:var(--ink)}
+.blog-post-body h3{font-family:'Fraunces',serif;font-size:19px;font-weight:300;margin:32px 0 12px;color:var(--ink)}
+.blog-post-body p{margin-bottom:20px}
+.blog-post-body ul,.blog-post-body ol{margin:0 0 20px 24px}
+.blog-post-body li{margin-bottom:8px}
+.blog-post-body blockquote{border-left:3px solid var(--teal);margin:24px 0;padding:4px 0 4px 20px;color:var(--muted);font-style:italic}
+.blog-post-cta{background:var(--teal-dim);border:1px solid #99f6e4;border-radius:12px;padding:28px 32px;margin-top:48px}
+.blog-post-cta h3{font-size:20px;font-weight:300;margin-bottom:8px}
+.blog-post-cta p{font-size:14px;color:var(--muted);margin-bottom:20px}
+@media(max-width:640px){.blog-grid,.blog-post-wrap{padding:0 20px 60px}.blog-hero{padding:36px 20px 24px}}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
   .hero{padding:40px 20px}
@@ -208,6 +236,7 @@ function Landing({ onSignup, onLogin }) {
       <nav className="nav">
         <Logo />
         <div className="nav-actions">
+          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
           <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
           <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
         </div>
@@ -283,7 +312,7 @@ function Landing({ onSignup, onLogin }) {
         <p style={{ color:"rgba(255,255,255,.8)",fontSize:15,marginBottom:28 }}>3 reviews free · No credit card · 2 minutes to set up</p>
         <button className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</button>
       </div>
-      <footer className="site-footer"><Logo /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
+      <footer className="site-footer"><Logo /><div style={{display:"flex",gap:20,alignItems:"center"}}><button style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button><span>© 2026 Voicemark · Built for freelancers & consultants</span></div></footer>
     </div>
   );
 }
@@ -875,13 +904,161 @@ class ErrorBoundary extends Component {
 }
 
 
+// ── BLOG DATA ──────────────────────────────────────────────────────────────
+const POSTS = [
+  {
+    slug: "how-to-ask-clients-for-testimonials",
+    tag: "Guide",
+    title: "How to Ask Clients for Testimonials (Without Feeling Awkward)",
+    excerpt: "Most freelancers never ask for testimonials. Here\'s exactly what to say, when to say it, and how to make it effortless for your client.",
+    date: "March 16, 2026",
+    readTime: "8 min read",
+    body: `
+<h2>Why testimonials matter more than you think</h2>
+<p>When a potential client finds you — through your website, a referral, or social media — the first thing they're looking for is proof that you deliver. Not just what you say about yourself, but what others say about working with you.</p>
+<p>A single strong testimonial from a real client does more for your credibility than any portfolio piece or about-page copy. It answers the question every prospect is silently asking: <em>"Can I trust this person with my project?"</em></p>
+<p>The challenge is that testimonials don't appear on their own. You have to ask for them.</p>
+
+<h2>The best time to ask</h2>
+<p>Timing is everything. Ask too early and the client hasn't experienced the full value of your work. Ask too late and the positive feelings have faded, the project is a distant memory, and they've moved on.</p>
+<p>The sweet spot is right after project completion — ideally within one to two weeks of delivery or handover. At this point:</p>
+<ul>
+  <li>The work is fresh in their mind</li>
+  <li>They've had a chance to see the results</li>
+  <li>The positive emotion from a successful project is still there</li>
+  <li>They haven't yet been buried under new priorities</li>
+</ul>
+
+<h2>Three approaches that work</h2>
+
+<h3>1. The direct ask (best for warm relationships)</h3>
+<p>If you have a good rapport with your client, a simple, direct ask is the most effective approach. Keep it short and specific.</p>
+<blockquote>Hi [Name], I really enjoyed working on [project] with you. If you have 60 seconds, I'd love a short testimonial I can share on my website. Here's my review link: [your Voicemark link]. Thank you so much — it genuinely helps.</blockquote>
+<p>That's it. Short, honest, with a direct link. No lengthy preamble needed.</p>
+
+<h3>2. The offboarding ask (built into your process)</h3>
+<p>The most consistent way to collect testimonials is to bake it into your offboarding routine. At the end of every project, send a final summary email that includes a testimonial request as one of the last items.</p>
+<p>This removes the awkwardness entirely because it becomes part of how you close every project — not a separate, special ask. Include the testimonial link in your final invoice or project handover document.</p>
+
+<h3>3. The follow-up ask (for past clients)</h3>
+<p>Have great clients from the past you never asked? It's not too late.</p>
+<blockquote>Hi [Name], I hope things are going well! I'm updating my website and would love to include a word from you about our work together on [project]. If you have a moment: [link]. No pressure at all — and thank you regardless.</blockquote>
+<p>Most clients are genuinely happy to help when asked this way.</p>
+
+<h2>Make it as easy as possible</h2>
+<p>The number one reason clients don't leave testimonials isn't that they don't want to — it's that it feels like too much work. Here's how to remove every barrier:</p>
+<ol>
+  <li><strong>Send a direct link.</strong> Don't ask them to find a form on your website. A one-click collection link removes all friction.</li>
+  <li><strong>Suggest a prompt.</strong> Ask a specific question: "What was the biggest result you got from our work together?" A blank text box is intimidating; a question makes it easy to start.</li>
+  <li><strong>Keep it short.</strong> Tell them two or three sentences is perfect. Most people overthink it and write nothing.</li>
+  <li><strong>No account needed.</strong> If your collection tool requires sign-up, most won't bother. The review process should take under 60 seconds.</li>
+</ol>
+
+<h2>What makes a good testimonial?</h2>
+<p>Not all testimonials are equally useful. A vague "Great work, would recommend!" is better than nothing, but a specific, results-focused testimonial converts much better. The best testimonials mention:</p>
+<ul>
+  <li>A specific problem or situation before your work</li>
+  <li>The result or outcome after your work</li>
+  <li>Something specific about working with you</li>
+</ul>
+<p>You can guide your client toward this by asking: <em>"What was the situation before we worked together, and what changed after?"</em></p>
+
+<h2>Once you have it: display it proudly</h2>
+<p>Collecting the testimonial is only half the job. Add your testimonials to your website homepage, proposals, LinkedIn profile, and email signature. The more visible they are, the harder they work for you.</p>
+    `
+  }
+];
+
+// ── BLOG INDEX ─────────────────────────────────────────────────────────────
+function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
+  useEffect(() => {
+    document.title = "Blog · Voicemark";
+    return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
+  }, []);
+  return (
+    <div>
+      <nav className="nav">
+        <Logo onClick={onHome} />
+        <div className="nav-actions">
+          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
+          <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
+          <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
+        </div>
+      </nav>
+      <div className="blog-hero">
+        <h1>Resources for freelancers</h1>
+        <p>Practical guides on collecting social proof and growing your freelance business.</p>
+      </div>
+      <div className="blog-grid">
+        {POSTS.map(post => (
+          <div className="blog-card" key={post.slug} onClick={() => onPost(post.slug)}>
+            <div className="blog-card-tag">{post.tag}</div>
+            <h2>{post.title}</h2>
+            <p>{post.excerpt}</p>
+            <div className="blog-card-meta">
+              <span>{post.date}</span>
+              <span>·</span>
+              <span>{post.readTime}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <footer className="site-footer"><Logo onClick={onHome} /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
+    </div>
+  );
+}
+
+// ── BLOG POST ──────────────────────────────────────────────────────────────
+function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
+  const post = POSTS.find(p => p.slug === slug);
+  useEffect(() => {
+    if (post) document.title = post.title + " · Voicemark";
+    window.scrollTo(0, 0);
+    return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
+  }, [slug]);
+  if (!post) return <div className="blog-post-wrap"><p>Post not found.</p></div>;
+  return (
+    <div>
+      <nav className="nav">
+        <Logo onClick={onHome} />
+        <div className="nav-actions">
+          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
+          <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
+          <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
+        </div>
+      </nav>
+      <div className="blog-post-wrap">
+        <div className="blog-post-back" onClick={onBack}>← All articles</div>
+        <div className="blog-post-tag">{post.tag}</div>
+        <h1>{post.title}</h1>
+        <div className="blog-post-meta">{post.date} · {post.readTime}</div>
+        <div className="blog-post-body" dangerouslySetInnerHTML={{ __html: post.body }} />
+        <div className="blog-post-cta">
+          <h3>Collect your first testimonial in 2 minutes</h3>
+          <p>Voicemark gives you a personal collection link you can send to any client. They leave a review in 60 seconds — no account needed. You approve it, and it appears on your website automatically.</p>
+          <button className="btn btn-primary" onClick={onSignup}>Get started free →</button>
+        </div>
+      </div>
+      <footer className="site-footer"><Logo onClick={onHome} /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
+    </div>
+  );
+}
+
+
 function App() {
-  const path = window.location.pathname;
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const path = currentPath;
   const collectMatch = path.match(/^\/collect\/(.+)$/);
 
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const onPop = () => setCurrentPath(window.location.pathname);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     // Check if this is a password recovery redirect from Supabase email link
@@ -918,8 +1095,17 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const blogPostMatch = path.match(/^\/blog\/(.+)$/);
+  const isBlogIndex = path === "/blog";
+
   if (collectMatch) {
     return <><StyleInject /><CollectPage slug={collectMatch[1]} /></>;
+  }
+  if (isBlogIndex) {
+    return <><StyleInject /><BlogIndex onPost={slug => window.history.pushState({}, "", "/blog/" + slug) || window.dispatchEvent(new PopStateEvent("popstate"))} onSignup={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); setTimeout(() => document.querySelector && setScreen && setScreen("signup"), 0); }} onLogin={() => { window.history.pushState({}, "", "/"); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
+  }
+  if (blogPostMatch) {
+    return <><StyleInject /><BlogPost slug={blogPostMatch[1]} onBack={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }} onSignup={() => { window.history.pushState({}, "", "/"); }} onLogin={() => { window.history.pushState({}, "", "/"); }} onHome={() => { window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }} /></>;
   }
 
   if (checking) return <><StyleInject /><div className="loading" style={{ minHeight:"100vh" }}>Loading...</div></>;
