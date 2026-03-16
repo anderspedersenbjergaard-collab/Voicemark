@@ -2,7 +2,7 @@
   "use strict";
 
   var SUPABASE_URL = "https://dcjfuwapheupwxnroizo.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_DPLOo-i8GB8bFyZ04abC4w_ffuUKYV1";
+  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjamZ1d2FwaGV1cHd4bnJvaXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDc5MjYsImV4cCI6MjA4ODc4MzkyNn0.VuSb30HHm_0WEnweKkhCmpXfRvO-jS8vGpo-82kSB4c";
 
   function stars(n) {
     return "★".repeat(n) + "☆".repeat(5 - n);
