@@ -966,6 +966,155 @@ const POSTS = [
 <h2>Once you have it: display it proudly</h2>
 <p>Collecting the testimonial is only half the job. Add your testimonials to your website homepage, proposals, LinkedIn profile, and email signature. The more visible they are, the harder they work for you.</p>
     `
+  },
+  {
+    slug: "how-to-add-testimonials-to-your-website",
+    tag: "Tutorial",
+    title: "How to Add Testimonials to Your Website (The Right Way)",
+    excerpt: "Adding testimonials to your website can double your conversion rate — but only if you do it right. Here's where to place them and how to display them effectively.",
+    date: "March 16, 2026",
+    readTime: "6 min read",
+    body: `
+<h2>Why testimonials on your website work</h2>
+<p>Your website has one job: convert visitors into clients. And nothing converts better than hearing from someone who has already hired you and loved it.</p>
+<p>Studies consistently show that social proof — reviews, testimonials, ratings — is one of the most powerful conversion tools available. A visitor who reads a genuine testimonial from a past client is significantly more likely to reach out than one who only reads your own copy about yourself.</p>
+<p>The problem most freelancers and consultants face isn't a lack of happy clients. It's that those clients' words are buried in old emails, never captured, or sitting unused on LinkedIn. This guide shows you how to fix that.</p>
+
+<h2>Where to place testimonials on your website</h2>
+<p>Placement matters as much as the testimonials themselves. Here are the highest-impact locations:</p>
+
+<h3>Your homepage</h3>
+<p>Your homepage is where most visitors land first. A short testimonial section — two or three quotes from real clients — placed between your hero section and your services does a huge amount of work. It tells visitors immediately that other people have trusted you and been happy with the results.</p>
+
+<h3>Your services or work page</h3>
+<p>Place testimonials that are specific to the type of work you're describing. If a client mentions your speed, put that testimonial next to where you talk about your process. Specificity matters — a generic quote anywhere is less powerful than a relevant quote right next to the claim it supports.</p>
+
+<h3>Your contact or inquiry page</h3>
+<p>This is one of the most underused placements. A visitor who has made it to your contact page is already interested — they just need a final push. A strong testimonial right next to your contact form can be the thing that turns an uncertain visitor into an inquiry.</p>
+
+<h3>Your proposals</h3>
+<p>If you send proposals to potential clients, adding one or two testimonials at the end is a simple way to reinforce your credibility at exactly the right moment.</p>
+
+<h2>What your testimonials should say</h2>
+<p>Not all testimonials are equally effective. A vague "Great to work with!" is better than nothing, but a specific, outcome-focused testimonial is significantly more powerful.</p>
+<p>The best testimonials answer three questions:</p>
+<ul>
+  <li><strong>What was the situation before?</strong> ("I had no online presence and was struggling to find clients...")</li>
+  <li><strong>What changed after working with you?</strong> ("...within three months I had a full pipeline.")</li>
+  <li><strong>What made the experience worth it?</strong> ("Working with [name] was effortless — they handled everything and kept me updated throughout.")</li>
+</ul>
+<p>When you ask clients for testimonials, guide them gently toward this structure by asking a specific question rather than a generic "Can you write a review?"</p>
+
+<h2>How to embed testimonials automatically</h2>
+<p>The old way of adding testimonials was to copy-paste quotes into your website manually and update them whenever you got a new one. This is slow, easy to forget, and means your website is almost always out of date.</p>
+<p>The modern approach is to use an embeddable widget that updates automatically. You collect a testimonial, approve it in a dashboard, and it appears on your website without you touching the code again.</p>
+<p>This matters because fresh, recent testimonials are more convincing than ones from two years ago. An automatically updating widget keeps your social proof current without any extra effort.</p>
+
+<h2>How many testimonials do you need?</h2>
+<p>More is not always better. Three to five strong, specific testimonials beat twenty vague ones every time. Start with your best three, display them prominently, and add new ones as you collect them.</p>
+<p>As you grow, you can filter and curate — showing only the testimonials most relevant to the type of work you want more of.</p>
+    `
+  },
+  {
+    slug: "social-proof-for-freelancers",
+    tag: "Strategy",
+    title: "Social Proof for Freelancers: Why It Matters and How to Get It",
+    excerpt: "Social proof is the single most powerful tool a freelancer has for winning new clients. Here's what it is, why it works, and how to build it from scratch.",
+    date: "March 16, 2026",
+    readTime: "7 min read",
+    body: `
+<h2>What is social proof?</h2>
+<p>Social proof is the psychological phenomenon where people look to the actions and opinions of others to guide their own decisions. When you're unsure whether to trust someone, you look for signals that other people already have — and were right to.</p>
+<p>For freelancers and consultants, social proof comes in several forms:</p>
+<ul>
+  <li>Client testimonials and reviews</li>
+  <li>Case studies showing results</li>
+  <li>Logos of companies you've worked with</li>
+  <li>Number of clients served</li>
+  <li>Ratings and star scores</li>
+  <li>LinkedIn recommendations</li>
+</ul>
+<p>Of all of these, client testimonials are the most accessible and the most convincing. They're personal, specific, and hard to fake.</p>
+
+<h2>Why social proof matters more for freelancers than for agencies</h2>
+<p>When a potential client hires a large agency, they're buying into a brand with an established reputation. There are case studies, a track record, multiple team members to vouch for the work.</p>
+<p>When they hire a freelancer, they're hiring a person. And people are inherently harder to evaluate. Your portfolio shows what you've made, but testimonials show what it was like to work with you — your communication, your reliability, your problem-solving under pressure.</p>
+<p>This is why social proof is disproportionately valuable for solo operators. It bridges the trust gap that every freelancer faces with every new prospect.</p>
+
+<h2>The trust gap: why new clients hesitate</h2>
+<p>Most freelancers don't lose clients because of their skills. They lose them because of uncertainty. A potential client is essentially being asked to hand money and responsibility to someone they've never worked with before.</p>
+<p>That's a leap of faith. Social proof makes the leap smaller. When a prospect reads: "I was nervous about hiring a freelancer for such a critical project, but [name] made the entire process easy and delivered results beyond what I expected" — that directly addresses the exact fear they have.</p>
+<p>Good testimonials don't just praise your work. They narrate the experience of trusting you and being glad they did.</p>
+
+<h2>How to build social proof from scratch</h2>
+<p>If you're just starting out, or if you've been freelancing for years but never systematically collected testimonials, here's how to build a foundation quickly.</p>
+
+<h3>Start with your best past clients</h3>
+<p>Think of the two or three clients who were most satisfied with your work and with whom you had the best relationship. Reach out personally and ask for a short testimonial. Most will say yes — people enjoy helping someone they liked working with.</p>
+
+<h3>Ask immediately after project completion</h3>
+<p>Going forward, make asking for a testimonial a standard part of how you close every project. The best time is one to two weeks after delivery, when the client has seen the results but the positive experience is still fresh.</p>
+
+<h3>Make it effortless for your client</h3>
+<p>Send a direct link to a collection page. Tell them two or three sentences is plenty. Ask a specific question to get them started: "What was the situation before we worked together, and what changed?" The easier you make it, the more likely they are to do it.</p>
+
+<h3>Diversify your social proof</h3>
+<p>Once you have testimonials, think about other forms of social proof you can build. A LinkedIn recommendation from a client carries weight. A case study with real numbers ("increased conversions by 40%") is compelling. A list of recognisable client logos builds credibility at a glance.</p>
+
+<h2>Where to display your social proof</h2>
+<p>Collecting testimonials is only half the job. The other half is making sure the right people see them at the right time.</p>
+<p>Display your testimonials on your website homepage, your services page, and your contact page. Include them in proposals. Share standout quotes on LinkedIn. The more visible your social proof, the harder it works for you — passively, around the clock, even when you're not actively pitching.</p>
+
+<h2>The compounding effect</h2>
+<p>Social proof compounds over time. Each testimonial you collect makes the next potential client more likely to hire you, which gives you another opportunity to collect a testimonial. Freelancers who invest in building social proof early find that new client acquisition gets progressively easier — because their reputation does most of the selling for them.</p>
+    `
+  },
+  {
+    slug: "freelance-portfolio-tips",
+    tag: "Guide",
+    title: "Freelance Portfolio Tips: The One Thing Most Portfolios Are Missing",
+    excerpt: "Your portfolio shows your work. But the one thing that actually convinces clients to hire you isn't in most freelance portfolios — and it's easier to fix than you think.",
+    date: "March 16, 2026",
+    readTime: "5 min read",
+    body: `
+<h2>Your portfolio shows what you made. It doesn't show what it was like to work with you.</h2>
+<p>Most freelance portfolios follow the same formula: a clean layout, a few case studies, a list of services, a contact form. If you've put effort into yours, you might also have some process documentation, before-and-after comparisons, or detailed project breakdowns.</p>
+<p>All of that is valuable. But there's one thing almost every freelance portfolio is missing, and it's the thing that would most directly convince a potential client to reach out: the words of someone who has already hired you.</p>
+
+<h2>What clients actually want to know</h2>
+<p>When a potential client lands on your portfolio, they're not just asking "is this person skilled?" They're asking:</p>
+<ul>
+  <li>Is this person easy to work with?</li>
+  <li>Do they communicate clearly?</li>
+  <li>Do they deliver what they promise?</li>
+  <li>Will I regret hiring them?</li>
+</ul>
+<p>Your portfolio answers the first question. A well-placed testimonial answers all the others.</p>
+<p>No amount of polished case study writing can answer "is this person easy to work with?" as convincingly as a past client saying: "Working with [name] was the smoothest project I've had in years. They handled everything, kept me informed, and delivered early."</p>
+
+<h2>Why most freelancers skip testimonials</h2>
+<p>It's not that freelancers don't have happy clients. Most do. The problem is that asking for a testimonial feels awkward, or it's easy to forget when you're busy moving on to the next project.</p>
+<p>The result is that years of great work go uncaptured. Clients who would have happily written a glowing review were never asked. And portfolios that could be winning more business stay silent on the most important question a prospect has.</p>
+
+<h2>How to add testimonials to your portfolio</h2>
+<p>The good news is that this is one of the easiest improvements you can make to your portfolio. Here's the approach that works:</p>
+
+<h3>Collect first, display second</h3>
+<p>Start by reaching out to two or three past clients and asking for a short testimonial. Tell them two sentences is plenty. Ask a specific question to make it easy: "What was the result of our work together, and what was it like working with me?"</p>
+
+<h3>Place them strategically</h3>
+<p>Don't bury testimonials at the bottom of a separate "testimonials" page. Place them where the decision happens — next to your services description, on your homepage above the fold, and right next to your contact form where a prospect is making up their mind.</p>
+
+<h3>Keep them fresh and automatic</h3>
+<p>The most effective portfolios display testimonials that update automatically as you collect new ones. This means your social proof is always current, and you never have to manually edit your website every time a client says something kind.</p>
+
+<h3>Match testimonials to services</h3>
+<p>If you offer multiple services, match your testimonials to the relevant service. A testimonial about your design work should appear on your design services page. A testimonial about your communication should appear wherever a client might be nervous about that exact thing.</p>
+
+<h2>The portfolio that wins more business</h2>
+<p>The freelancers who consistently win the best clients aren't always the most skilled — they're the ones who have built the most trust before the first conversation even happens. A portfolio backed by genuine client testimonials does exactly that.</p>
+<p>It tells every new visitor: other people have taken this leap, and they were glad they did. Come join them.</p>
+    `
   }
 ];
 
