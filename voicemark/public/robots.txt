@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Allow: /blog
+Allow: /blog/
+
+Disallow: /collect/
+Disallow: /dashboard
 
 Sitemap: https://www.voicemark.co/sitemap.xml
