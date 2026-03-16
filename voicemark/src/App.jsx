@@ -912,7 +912,7 @@ class ErrorBoundary extends Component {
 
 
 // ── SEO HELPER ─────────────────────────────────────────────────────────────
-function setMeta({ title, description, url }) {
+function setMeta({ title, description, url, type }) {
   document.title = title;
   const set = (sel, attr, val) => {
     let el = document.querySelector(sel);
@@ -928,7 +928,7 @@ function setMeta({ title, description, url }) {
   set('meta[property="og:url"]', "property", "og:url");
   set('meta[property="og:url"]', "content", url || window.location.href);
   set('meta[property="og:type"]', "property", "og:type");
-  set('meta[property="og:type"]', "content", "website");
+  set('meta[property="og:type"]', "content", type || "website");
   set('meta[property="og:image"]', "property", "og:image");
   set('meta[property="og:image"]', "content", "https://www.voicemark.co/og-image.png");
 }
@@ -948,7 +948,7 @@ const POSTS = [
 <h2>Why testimonials matter more than you think</h2>
 <p>When a potential client finds you — through your website, a referral, or social media — the first thing they're looking for is proof that you deliver. Not just what you say about yourself, but what others say about working with you.</p>
 <p>A single strong testimonial from a real client does more for your credibility than any portfolio piece or about-page copy. It answers the question every prospect is silently asking: <em>"Can I trust this person with my project?"</em></p>
-<p>The challenge is that testimonials don't appear on their own. You have to ask for them.</p>
+<p>The challenge is that testimonials don't appear on their own. You have to ask for them. If you're not sure how, read our guide on <a href="/blog/how-to-ask-clients-for-testimonials" style="color:#0d9488;text-decoration:underline">how to ask clients for testimonials</a>.</p>
 
 <h2>The best time to ask</h2>
 <p>Timing is everything. Ask too early and the client hasn't experienced the full value of your work. Ask too late and the positive feelings have faded, the project is a distant memory, and they've moved on.</p>
@@ -995,7 +995,7 @@ const POSTS = [
 <p>You can guide your client toward this by asking: <em>"What was the situation before we worked together, and what changed after?"</em></p>
 
 <h2>Once you have it: display it proudly</h2>
-<p>Collecting the testimonial is only half the job. Add your testimonials to your website homepage, proposals, LinkedIn profile, and email signature. The more visible they are, the harder they work for you.</p>
+<p>Collecting the testimonial is only half the job. For the full picture on where and how to display testimonials, read our guide on <a href="/blog/how-to-add-testimonials-to-your-website" style="color:#0d9488;text-decoration:underline">how to add testimonials to your website</a>. Add your testimonials to your website homepage, proposals, LinkedIn profile, and email signature. The more visible they are, the harder they work for you.</p>
     `
   },
   {
@@ -1038,6 +1038,7 @@ const POSTS = [
 <p>When you ask clients for testimonials, guide them gently toward this structure by asking a specific question rather than a generic "Can you write a review?"</p>
 
 <h2>How to embed testimonials automatically</h2>
+<p>Before you can display testimonials, you need to collect them. Read our guide on <a href="/blog/how-to-ask-clients-for-testimonials" style="color:#0d9488;text-decoration:underline">how to ask clients for testimonials</a> if you're starting from scratch.</p>
 <p>The old way of adding testimonials was to copy-paste quotes into your website manually and update them whenever you got a new one. This is slow, easy to forget, and means your website is almost always out of date.</p>
 <p>The modern approach is to use an embeddable widget that updates automatically. You collect a testimonial, approve it in a dashboard, and it appears on your website without you touching the code again.</p>
 <p>This matters because fresh, recent testimonials are more convincing than ones from two years ago. An automatically updating widget keeps your social proof current without any extra effort.</p>
@@ -1148,6 +1149,7 @@ const POSTS = [
 <h2>The portfolio that wins more business</h2>
 <p>The freelancers who consistently win the best clients aren't always the most skilled — they're the ones who have built the most trust before the first conversation even happens. A portfolio backed by genuine client testimonials does exactly that.</p>
 <p>It tells every new visitor: other people have taken this leap, and they were glad they did. Come join them.</p>
+<p>Ready to add testimonials to your portfolio? Read our guide on <a href="/blog/how-to-add-testimonials-to-your-website" style="color:#0d9488;text-decoration:underline">how to add testimonials to your website</a>.</p>
     `
   }
 ];
@@ -1203,7 +1205,8 @@ function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
       setMeta({
         title: post.title + " · Voicemark",
         description: post.description,
-        url: "https://www.voicemark.co/blog/" + post.slug
+        url: "https://www.voicemark.co/blog/" + post.slug,
+        type: "article"
       });
     }
     window.scrollTo(0, 0);
@@ -1245,8 +1248,14 @@ function App() {
 
   const [screen, setScreen] = useState(() => {
     const p = new URLSearchParams(window.location.search);
-    if (p.get("signup") === "1") return "signup";
-    if (p.get("login") === "1") return "login";
+    if (p.get("signup") === "1") {
+      window.history.replaceState({}, "", "/");
+      return "signup";
+    }
+    if (p.get("login") === "1") {
+      window.history.replaceState({}, "", "/");
+      return "login";
+    }
     return "landing";
   });
   const [user, setUser] = useState(null);
