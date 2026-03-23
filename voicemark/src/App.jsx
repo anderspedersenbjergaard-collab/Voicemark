@@ -757,7 +757,7 @@ function Dashboard({ user, onLogout }) {
         {upgradedBanner && (
           <div style={{ background:"#0d9488",color:"white",padding:"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
             <span>🎉 <strong>Welcome to Pro!</strong> Your account has been upgraded. Collect unlimited reviews.</span>
-            <button onClick={() => setUpgradedBanner(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18llineHeight:1 }}>×</button>
+            <button onClick={() => setUpgradedBanner(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
           </div>
         )}
         {!isPaid && (
@@ -971,7 +971,7 @@ class ErrorBoundary extends Component {
         <button className="btn btn-primary" style={{marginTop:24}} onClick={() => window.location.reload()}>Refresh page</button>
       </div>
     );
-  e  return this.props.children;
+  return this.props.children;
   }
 }
 
