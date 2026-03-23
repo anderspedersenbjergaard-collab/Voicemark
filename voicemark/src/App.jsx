@@ -19,6 +19,7 @@ const G = `
 }
 body{background:var(--bg);color:var(--ink);font-family:'Epilogue',sans-serif;font-size:15px;line-height:1.6}
 h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
+a{text-decoration:none;color:inherit}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--r);font-family:'Epilogue',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent}
 .btn-primary{background:var(--teal);color:white;border-color:var(--teal)}
 .btn-primary:hover{background:#0b7c71}
@@ -184,14 +185,26 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;line-height:1.2}
 .blog-post-cta h3{font-size:20px;font-weight:300;margin-bottom:8px}
 .blog-post-cta p{font-size:14px;color:var(--muted);margin-bottom:20px}
 @media(max-width:640px){.blog-grid,.blog-post-wrap{padding:0 20px 60px}.blog-hero{padding:36px 20px 24px}}
+@media(max-width:900px){
+  .how-steps{grid-template-columns:1fr}
+  .widget-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr}
+  .nav,.site-footer{padding:16px 28px}
+  .hero{padding:48px 28px}
+  .how-section,.faq-section,.widget-preview-section{padding:56px 28px}
+  .pricing-section{padding:56px 28px}
+}
 @media(max-width:640px){
   .nav,.site-footer{padding:16px 20px}
   .hero{padding:40px 20px}
-  .how-steps,.widget-grid,.stats-row,.faq-section{grid-template-columns:1fr}
-  .faq-section{padding:48px 20px}
+  .how-steps,.widget-grid,.stats-row{grid-template-columns:1fr}
+  .faq-section{padding:48px 20px;grid-template-columns:1fr}
   .app{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative}
   .content{padding:20px}
+  .hero h1{font-size:36px}
+  .pricing-card{min-width:auto;width:100%;padding:28px 24px}
+  .nav-actions .btn{padding:8px 14px;font-size:13px}
 }
 `;
 
@@ -207,8 +220,36 @@ function StyleInject() {
   return null;
 }
 
+function useJsonLd(data) {
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.id = "vm-jsonld";
+    el.textContent = JSON.stringify(data);
+    const old = document.getElementById("vm-jsonld");
+    if (old) old.remove();
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [JSON.stringify(data)]);
+}
+
+function navigate(path) {
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function NavLink({ href, className, style, onClick, children }) {
+  const handleClick = (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return; // allow open-in-new-tab
+    e.preventDefault();
+    if (onClick) onClick(e);
+    else navigate(href);
+  };
+  return <a href={href} className={className} style={style} onClick={handleClick}>{children}</a>;
+}
+
 function Logo({ onClick }) {
-  return <span className="logo" onClick={onClick}>Voice<span>mark</span></span>;
+  return <a href="/" className="logo" onClick={e => { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); onClick ? onClick() : navigate("/"); } }}>Voice<span>mark</span></a>;
 }
 
 function FaqItem({ q, a }) {
@@ -232,6 +273,16 @@ function Landing({ onSignup, onLogin }) {
       url: "https://www.voicemark.co"
     });
   }, []);
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Voicemark",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "url": "https://www.voicemark.co",
+    "description": "Send one link. Collect beautiful testimonials from clients. Embed them on your website automatically.",
+    "offers": { "@type": "Offer", "price": "19", "priceCurrency": "USD", "url": "https://www.voicemark.co" }
+  });
   const tiles = [
     { name:"Sarah K.", role:"Freelance Designer", rating:5, text:"Landed 3 new clients after adding these reviews to my portfolio.", color:"#0d9488" },
     { name:"Marco T.", role:"Business Consultant", rating:5, text:"My proposal conversion rate doubled. Clients trust me before we meet.", color:"#7c3aed" },
@@ -240,21 +291,23 @@ function Landing({ onSignup, onLogin }) {
   ];
   return (
     <div>
-      <nav className="nav">
-        <Logo />
-        <div className="nav-actions">
-          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
-          <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
-          <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
-        </div>
-      </nav>
+      <header>
+        <nav className="nav">
+          <Logo />
+          <div className="nav-actions">
+            <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
+            <NavLink href="/?login=1" className="btn btn-ghost" onClick={onLogin}>Log in</NavLink>
+            <NavLink href="/?signup=1" className="btn btn-primary" onClick={onSignup}>Start free →</NavLink>
+          </div>
+        </nav>
+      </header>
       <section className="hero">
         <div className="hero-badge">✦ Built for freelancers & consultants</div>
         <h1>Turn happy clients into<br /><em>social proof</em></h1>
         <p>Send one link. Collect beautiful testimonials. Embed them on your website automatically.</p>
         <div className="hero-cta">
-          <button className="btn btn-primary btn-lg" onClick={onSignup}>Collect your first review →</button>
-          <button className="btn btn-outline btn-lg" onClick={onLogin}>Log in</button>
+          <NavLink href="/?signup=1" className="btn btn-primary btn-lg" onClick={onSignup}>Collect your first review →</NavLink>
+          <NavLink href="/?login=1" className="btn btn-outline btn-lg" onClick={onLogin}>Log in</NavLink>
         </div>
         <p className="hero-note">3 reviews free · No credit card · 2 minutes to set up</p>
       </section>
@@ -300,7 +353,7 @@ function Landing({ onSignup, onLogin }) {
           <ul className="p-features">
             {["Unlimited testimonials","Custom collection page","Embeddable website widget","Approve before publishing","Email notifications"].map(f => <li key={f}>{f}</li>)}
           </ul>
-          <button className="btn btn-primary btn-lg btn-full" onClick={onSignup}>Get started free →</button>
+          <NavLink href="/?signup=1" className="btn btn-primary btn-lg btn-full" onClick={onSignup}>Get started free →</NavLink>
         </div>
       </div>
       <div className="faq-section">
@@ -317,9 +370,9 @@ function Landing({ onSignup, onLogin }) {
       <div style={{ background:"var(--teal)",padding:"56px 48px",textAlign:"center" }}>
         <h2 style={{ color:"white",fontSize:32,fontWeight:300,marginBottom:12 }}>Ready to collect your first review?</h2>
         <p style={{ color:"rgba(255,255,255,.8)",fontSize:15,marginBottom:28 }}>3 reviews free · No credit card · 2 minutes to set up</p>
-        <button className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</button>
+        <NavLink href="/?signup=1" className="btn btn-lg" style={{ background:"white",color:"var(--teal)",border:"none",fontWeight:600 }} onClick={onSignup}>Get started free →</NavLink>
       </div>
-      <footer className="site-footer"><Logo /><div style={{display:"flex",gap:20,alignItems:"center"}}><button style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button><span>© 2026 Voicemark · Built for freelancers & consultants</span></div></footer>
+      <footer className="site-footer"><Logo /><div style={{display:"flex",gap:20,alignItems:"center"}}><NavLink href="/blog" style={{color:"var(--muted)",fontSize:13}}>Blog</NavLink><span>© 2026 Voicemark · Built for freelancers & consultants</span></div></footer>
     </div>
   );
 }
@@ -525,9 +578,9 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
+          <div className="field"><label>Y�ur review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
+            <div className="field"><label>Y�ur name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
             <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
           </div>
           {err && <p className="err">{err}</p>}
@@ -677,7 +730,7 @@ function Dashboard({ user, onLogout }) {
       <aside className="sidebar">
         <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
-          {[["reviews","⭐","Reviews"],["embed","🔗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
+          {[["reviews","⭐","Reviews"],["embed","🕗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
             <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => setTab(v)}><span>{ic}</span><span>{lb}</span></div>
           ))}
         </nav>
@@ -1194,21 +1247,23 @@ function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
   }, []);
   return (
     <div>
-      <nav className="nav">
-        <Logo onClick={onHome} />
-        <div className="nav-actions">
-          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
-          <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
-          <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
-        </div>
-      </nav>
+      <header>
+        <nav className="nav">
+          <Logo onClick={onHome} />
+          <div className="nav-actions">
+            <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
+            <NavLink href="/?login=1" className="btn btn-ghost" onClick={onLogin}>Log in</NavLink>
+            <NavLink href="/?signup=1" className="btn btn-primary" onClick={onSignup}>Start free →</NavLink>
+          </div>
+        </nav>
+      </header>
       <div className="blog-hero">
         <h1>Resources for freelancers</h1>
         <p>Practical guides on collecting social proof and growing your freelance business.</p>
       </div>
       <div className="blog-grid">
         {POSTS.map(post => (
-          <div className="blog-card" key={post.slug} onClick={() => onPost(post.slug)}>
+          <NavLink href={"/blog/" + post.slug} className="blog-card" key={post.slug} onClick={() => onPost(post.slug)}>
             <div className="blog-card-tag">{post.tag}</div>
             <h2>{post.title}</h2>
             <p>{post.excerpt}</p>
@@ -1217,7 +1272,7 @@ function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
               <span>·</span>
               <span>{post.readTime}</span>
             </div>
-          </div>
+          </NavLink>
         ))}
       </div>
       <footer className="site-footer"><Logo onClick={onHome} /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
@@ -1240,19 +1295,31 @@ function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
     window.scrollTo(0, 0);
     return () => { document.title = "Voicemark – Collect Client Testimonials Automatically"; };
   }, [slug]);
+  useJsonLd(post ? {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.description,
+    "datePublished": "2026-03-16",
+    "author": { "@type": "Organization", "name": "Voicemark" },
+    "publisher": { "@type": "Organization", "name": "Voicemark", "url": "https://www.voicemark.co" },
+    "url": "https://www.voicemark.co/blog/" + (post?.slug || "")
+  } : {});
   if (!post) return <div className="blog-post-wrap"><p>Post not found.</p></div>;
   return (
     <div>
-      <nav className="nav">
-        <Logo onClick={onHome} />
-        <div className="nav-actions">
-          <button className="btn btn-ghost" style={{fontSize:13}} onClick={() => { window.history.pushState({}, "", "/blog"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Blog</button>
-          <button className="btn btn-ghost" onClick={onLogin}>Log in</button>
-          <button className="btn btn-primary" onClick={onSignup}>Start free →</button>
-        </div>
-      </nav>
-      <div className="blog-post-wrap">
-        <div className="blog-post-back" onClick={onBack}>← All articles</div>
+      <header>
+        <nav className="nav">
+          <Logo onClick={onHome} />
+          <div className="nav-actions">
+            <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
+            <NavLink href="/?login=1" className="btn btn-ghost" onClick={onLogin}>Log in</NavLink>
+            <NavLink href="/?signup=1" className="btn btn-primary" onClick={onSignup}>Start free →</NavLink>
+          </div>
+        </nav>
+      </header>
+      <article className="blog-post-wrap">
+        <NavLink href="/blog" className="blog-post-back">← All articles</NavLink>
         <div className="blog-post-tag">{post.tag}</div>
         <h1>{post.title}</h1>
         <div className="blog-post-meta">{post.date} · {post.readTime}</div>
@@ -1260,9 +1327,9 @@ function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
         <div className="blog-post-cta">
           <h3>Collect your first testimonial in 2 minutes</h3>
           <p>Voicemark gives you a personal collection link you can send to any client. They leave a review in 60 seconds — no account needed. You approve it, and it appears on your website automatically.</p>
-          <button className="btn btn-primary" onClick={onSignup}>Get started free →</button>
+          <NavLink href="/?signup=1" className="btn btn-primary" onClick={onSignup}>Get started free →</NavLink>
         </div>
-      </div>
+      </article>
       <footer className="site-footer"><Logo onClick={onHome} /><span>© 2026 Voicemark · Built for freelancers & consultants</span></footer>
     </div>
   );
