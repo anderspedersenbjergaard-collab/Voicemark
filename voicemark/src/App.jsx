@@ -1406,7 +1406,7 @@ function App() {
         setScreen("app");
       }
       setChecking(false);
-    });
+    }).catch(() => setChecking(false));
 
     // Listen for auth events (password recovery + future sign-ins via magic link etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
