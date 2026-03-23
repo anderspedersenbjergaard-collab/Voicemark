@@ -283,6 +283,18 @@ function Landing({ onSignup, onLogin }) {
     "description": "Send one link. Collect beautiful testimonials from clients. Embed them on your website automatically.",
     "offers": { "@type": "Offer", "price": "19", "priceCurrency": "USD", "url": "https://www.voicemark.co" }
   });
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":"Does it work with any website?","acceptedAnswer":{"@type":"Answer","text":"Yes – Squarespace, Wix, Webflow, WordPress, or any custom site. Just paste one line of code."}},
+      {"@type":"Question","name":"Do my clients need to create an account?","acceptedAnswer":{"@type":"Answer","text":"No. They just click your link, leave a review, and they're done. Takes 60 seconds."}},
+      {"@type":"Question","name":"Can I choose which reviews to show?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every review goes through your approval queue first – you decide what gets published."}},
+      {"@type":"Question","name":"Can I cancel anytime?","acceptedAnswer":{"@type":"Answer","text":"Absolutely. No contracts, no questions asked. Cancel from your dashboard settings."}},
+      {"@type":"Question","name":"What happens after 3 free reviews?","acceptedAnswer":{"@type":"Answer","text":"You'll be prompted to upgrade to Pro ($19/mo) to keep collecting. Your existing reviews are always safe."}},
+      {"@type":"Question","name":"Do you offer refunds?","acceptedAnswer":{"@type":"Answer","text":"If you're not satisfied within the first 7 days, we'll refund you in full. No questions asked."}}
+    ]
+  });
   const tiles = [
     { name:"Sarah K.", role:"Freelance Designer", rating:5, text:"Landed 3 new clients after adding these reviews to my portfolio.", color:"#0d9488" },
     { name:"Marco T.", role:"Business Consultant", rating:5, text:"My proposal conversion rate doubled. Clients trust me before we meet.", color:"#7c3aed" },
@@ -377,7 +389,7 @@ function Landing({ onSignup, onLogin }) {
   );
 }
 
-// ── AUTH ───────────────────────────────────────────────────────────────────
+// ── AUTH ──────────────────────────────────────────────────────────────────
 function Auth({ mode, onAuth, onSwitch, onHome }) {
   const [f, setF] = useState({ email:"", password:"", company:"" });
   const [err, setErr] = useState("");
@@ -578,9 +590,9 @@ function CollectPage({ slug, userId: userIdProp, company: companyProp, onDone, p
                 onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}>★</button>
             ))}
           </div>
-          <div className="field"><label>Y�ur review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
+          <div className="field"><label>Your review</label><textarea placeholder="What did you enjoy about working together?" value={f.text} onChange={set("text")} maxLength={600} /></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div className="field"><label>Y�ur name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
+            <div className="field"><label>Your name</label><input placeholder="Sarah K." value={f.name} onChange={set("name")} maxLength={80} /></div>
             <div className="field"><label>Role / Company</label><input placeholder="Freelance Designer" value={f.role} onChange={set("role")} maxLength={80} /></div>
           </div>
           {err && <p className="err">{err}</p>}
@@ -730,7 +742,7 @@ function Dashboard({ user, onLogout }) {
       <aside className="sidebar">
         <div className="s-logo">Voice<span>mark</span></div>
         <nav className="s-nav">
-          {[["reviews","⭐","Reviews"],["embed","🕗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
+          {[["reviews","⭐","Reviews"],["embed","🔗","Embed widget"],["collect","📨","Collection link"],["settings","⚙️","Settings"]].map(([v,ic,lb]) => (
             <div key={v} className={`s-item ${tab===v?"active":""}`} onClick={() => setTab(v)}><span>{ic}</span><span>{lb}</span></div>
           ))}
         </nav>
@@ -745,7 +757,7 @@ function Dashboard({ user, onLogout }) {
         {upgradedBanner && (
           <div style={{ background:"#0d9488",color:"white",padding:"12px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:14 }}>
             <span>🎉 <strong>Welcome to Pro!</strong> Your account has been upgraded. Collect unlimited reviews.</span>
-            <button onClick={() => setUpgradedBanner(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18,lineHeight:1 }}>×</button>
+            <button onClick={() => setUpgradedBanner(false)} style={{ background:"none",border:"none",color:"white",cursor:"pointer",fontSize:18llineHeight:1 }}>×</button>
           </div>
         )}
         {!isPaid && (
@@ -836,7 +848,7 @@ function Dashboard({ user, onLogout }) {
               </div>
               <div className="settings-card">
                 <h3>Widget preview</h3>
-                <div className="widget-grid" style={{ marginTop:4 }}>
+                  <div className="widget-grid" style={{ marginTop:4 }}>
                   {reviews.filter(r => r.status==="approved").slice(0,4).map(r => (
                     <div className="t-tile" key={r.id}>
                       <div className="t-stars">{stars(r.rating)}</div>
@@ -959,7 +971,7 @@ class ErrorBoundary extends Component {
         <button className="btn btn-primary" style={{marginTop:24}} onClick={() => window.location.reload()}>Refresh page</button>
       </div>
     );
-    return this.props.children;
+  e  return this.props.children;
   }
 }
 
