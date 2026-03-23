@@ -1398,15 +1398,19 @@ function App() {
       return;
     }
 
+    // Safety timeout: if Supabase hangs, show landing page after 5s
+    const authTimeout = setTimeout(() => setChecking(false), 5000);
+
     // Get current session first, then set up listener for future changes
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(authTimeout);
       if (session?.user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
         setUser({ ...session.user, profile });
         setScreen("app");
       }
       setChecking(false);
-    }).catch(() => setChecking(false));
+    }).catch(() => { clearTimeout(authTimeout); setChecking(false); });
 
     // Listen for auth events (password recovery + future sign-ins via magic link etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -1421,7 +1425,7 @@ function App() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(authTimeout); subscription.unsubscribe(); };
   }, []);
 
   const blogPostMatch = path.match(/^\/blog\/(.+)$/);
