@@ -256,7 +256,7 @@ function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="faq-item">
-      <div className="faq-q" onClick={() => setOpen(o => !o)}>
+      <div className="faq-q" role="button" tabIndex={0} aria-expanded={open} onClick={() => setOpen(o => !o)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); } }}>
         <span>{q}</span><span>{open ? "−" : "+"}</span>
       </div>
       {open && <div className="faq-a">{a}</div>}
@@ -304,7 +304,7 @@ function Landing({ onSignup, onLogin }) {
   return (
     <div>
       <header>
-        <nav className="nav">
+        <nav className="nav" aria-label="Main navigation">
           <Logo />
           <div className="nav-actions">
             <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
@@ -313,7 +313,7 @@ function Landing({ onSignup, onLogin }) {
           </div>
         </nav>
       </header>
-      <section className="hero">
+      <section className="hero" aria-label="Hero">
         <div className="hero-badge">✦ Built for freelancers & consultants</div>
         <h1>Turn happy clients into<br /><em>social proof</em></h1>
         <p>Send one link. Collect beautiful testimonials. Embed them on your website automatically.</p>
@@ -368,7 +368,7 @@ function Landing({ onSignup, onLogin }) {
           <NavLink href="/?signup=1" className="btn btn-primary btn-lg btn-full" onClick={onSignup}>Get started free →</NavLink>
         </div>
       </div>
-      <div className="faq-section">
+      <div className="faq-section" role="region" aria-label="Frequently asked questions">
         <h2>Frequently asked questions</h2>
         {[
           ["Does it work with any website?","Yes – Squarespace, Wix, Webflow, WordPress, or any custom site. Just paste one line of code."],
@@ -1260,7 +1260,7 @@ function BlogIndex({ onPost, onSignup, onLogin, onHome }) {
   return (
     <div>
       <header>
-        <nav className="nav">
+        <nav className="nav" aria-label="Main navigation">
           <Logo onClick={onHome} />
           <div className="nav-actions">
             <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
@@ -1321,7 +1321,7 @@ function BlogPost({ slug, onBack, onSignup, onLogin, onHome }) {
   return (
     <div>
       <header>
-        <nav className="nav">
+        <nav className="nav" aria-label="Main navigation">
           <Logo onClick={onHome} />
           <div className="nav-actions">
             <NavLink href="/blog" className="btn btn-ghost" style={{fontSize:13}}>Blog</NavLink>
